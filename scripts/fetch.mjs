@@ -1,23 +1,33 @@
 /**
  * SBOR fixing pipeline.
- * Pulls Stacks lending markets from DefiLlama, computes the depth-weighted
- * fixing per currency, and writes api/latest.json, latest.txt, api/history.json.
- * No API key required.
+ *
+ * Rates are read directly from Zest's on-chain data contract, which publishes
+ * both a supply APY and a borrow APY per asset. Depth comes from DefiLlama.
+ * Writes api/latest.json, api/history.json and latest.txt. No API key required.
  */
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { fetchCallReadOnlyFunction, contractPrincipalCV, cvToValue } from "@stacks/transactions";
 
-const POOLS = "https://yields.llama.fi/pools";
-const BORROW_URLS = [
-  "https://yields.llama.fi/lendBorrow",
-  "https://yields.llama.fi/poolsBorrow"
-];
+const POOLS_URL = "https://yields.llama.fi/pools";
 
-const CURRENCY = {
-  "USD": ["USDCX", "USDH", "USDC", "USDT", "AEUSDC"],
-  "BTC": ["SBTC", "WBTC", "XBTC"],
-  "STX": ["STX", "STSTX"]
+/* Zest V2. Deployer, data contract, and the asset principals it keys on. */
+const ZEST = {
+  venue: "Zest V2",
+  deployer: "SP1A27KFY4XERQCCRCARCYD1CC5N7M6688BSYADJ7",
+  dataContract: "v0-1-data",
+  assets: [
+    { symbol:"sBTC",     currency:"BTC", address:"SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4", contract:"sbtc-token" },
+    { symbol:"USDCx",    currency:"USD", address:"SP120SBRBQJ00MCWS7TM5R8WJNTTKD5K0HFRC2CNE", contract:"usdcx" },
+    { symbol:"USDh",     currency:"USD", address:"SPN5AKG35QZSK2M8GAMR4AFX45659RJHDW353HSG", contract:"usdh-token-v1" },
+    { symbol:"STX",      currency:"STX", address:"SP1A27KFY4XERQCCRCARCYD1CC5N7M6688BSYADJ7", contract:"wstx" },
+    { symbol:"stSTX",    currency:"STX", address:"SP4SZE494VC2YC5JYG7AYFQ44F5Q4PYV7DVMDPBG", contract:"ststx-token" },
+    /* collateral only, reported but never in a fixing */
+    { symbol:"stSTXbtc", currency:null,  address:"SP4SZE494VC2YC5JYG7AYFQ44F5Q4PYV7DVMDPBG", contract:"ststxbtc-token-v2" }
+  ]
 };
-const COLLATERAL_ONLY = ["STSTXBTC"];
+
+/* DefiLlama symbol -> our symbol, for matching depth */
+const DEPTH_ALIAS = { SBTC:"sBTC", USDC:"USDCx", USDH:"USDh", STX:"STX", STSTX:"stSTX", STSTXBTC:"stSTXbtc" };
 
 const META = {
   USD: { label:"SBOR-USD", currency:"USD",
@@ -29,106 +39,81 @@ const META = {
 };
 
 const YIELD_SOURCE = {
-  SBTC:  "Bitcoin protocol yield via dual stacking, paid on enrolment",
-  STSTX: "PoX staking yield on the underlying, managed by StackingDAO"
+  sBTC:  "Bitcoin protocol yield via dual stacking, paid on enrolment",
+  stSTX: "PoX staking yield on the underlying, managed by StackingDAO"
 };
 
-const round = (n, d = 2) => Number(n.toFixed(d));
-const aprToApy = apr => (Math.pow(1 + apr / 100 / 365, 365) - 1) * 100;
+const round = (n, d = 2) => Number(Number(n).toFixed(d));
 const log = (...a) => console.error(...a);
 
-async function getJson(url){
-  const r = await fetch(url, { headers:{ accept:"application/json" } });
-  if(!r.ok) throw new Error(`${url} responded ${r.status}`);
-  return r.json();
-}
-
-function currencyOf(symbol){
-  const s = String(symbol).toUpperCase();
-  if (COLLATERAL_ONLY.includes(s)) return null;
-  for (const [cur, syms] of Object.entries(CURRENCY)) if (syms.includes(s)) return cur;
-  return null;
-}
-
-/* Pull a borrow APR out of whatever shape the record has. */
-function borrowAprOf(rec){
-  if (!rec) return null;
-  for (const k of ["apyBaseBorrow","apyBorrow","borrowApy","apyBaseBorrowUsd"]){
-    if (typeof rec[k] === "number") return rec[k];
+async function depthBySymbol(){
+  const r = await fetch(POOLS_URL, { headers:{ accept:"application/json" } });
+  if(!r.ok) throw new Error(`pools responded ${r.status}`);
+  const { data = [] } = await r.json();
+  const out = {};
+  for (const p of data.filter(p => p.chain === "Stacks")){
+    const sym = DEPTH_ALIAS[String(p.symbol).toUpperCase()];
+    if (sym && p.tvlUsd > 0) out[sym] = Math.round(p.tvlUsd);
   }
-  return null;
+  return out;
+}
+
+async function apysFor(asset){
+  const res = await fetchCallReadOnlyFunction({
+    contractAddress: ZEST.deployer,
+    contractName: ZEST.dataContract,
+    functionName: "get-asset-apys",
+    functionArgs: [contractPrincipalCV(asset.address, asset.contract)],
+    senderAddress: ZEST.deployer,
+    network: "mainnet"
+  });
+  const v = cvToValue(res, true);
+  const t = v?.value ?? v;                       // unwrap (ok ...) if present
+  const supply = Number(t["supply-apy"]?.value ?? t["supply-apy"]) / 100;
+  const borrow = Number(t["borrow-apy"]?.value ?? t["borrow-apy"]) / 100;
+  if (!Number.isFinite(supply) || !Number.isFinite(borrow))
+    throw new Error(`unexpected shape: ${JSON.stringify(v).slice(0,200)}`);
+  return { supply, borrow };
 }
 
 const main = async () => {
-  const poolsRes = await getJson(POOLS);
-  const stacks = (poolsRes.data || []).filter(p => p.chain === "Stacks");
-  log(`Stacks pools found: ${stacks.length}`);
-  if (!stacks.length) throw new Error("No Stacks pools returned. Aborting rather than writing an empty fixing.");
-  for (const p of stacks){
-    log(`  ${p.project} ${p.symbol} tvl=${Math.round(p.tvlUsd||0)} apyBase=${p.apyBase} apyReward=${p.apyReward} pool=${p.pool}`);
+  const depth = await depthBySymbol();
+  log("depth from DefiLlama:", JSON.stringify(depth));
+
+  const markets = [];
+  for (const a of ZEST.assets){
+    try {
+      const { supply, borrow } = await apysFor(a);
+      const d = depth[a.symbol] ?? 0;
+      log(`  ${a.symbol}: supply=${round(supply)}% borrow=${round(borrow)}% depth=${d}`);
+      if (!a.currency){ log(`    (collateral only, excluded from fixings)`); continue; }
+      if (d <= 0){ log(`    (no depth, skipped)`); continue; }
+      markets.push({
+        venue: ZEST.venue, asset: a.symbol, currency: a.currency,
+        borrow: round(borrow), supply: round(supply),
+        ...(YIELD_SOURCE[a.symbol] && { protocolYieldSource: YIELD_SOURCE[a.symbol] }),
+        depthUsd: d, phaseIn: 1
+      });
+    } catch(e){
+      log(`  ${a.symbol}: read failed, excluded. ${e.message}`);
+    }
   }
-
-  let borrowRes = null, borrowUrl = null;
-  for (const url of BORROW_URLS){
-    try { borrowRes = await getJson(url); borrowUrl = url; break; }
-    catch(e){ log(`borrow source ${url} unavailable: ${e.message}`); }
-  }
-  const borrowList = !borrowRes ? []
-    : (Array.isArray(borrowRes) ? borrowRes : (borrowRes.data || []));
-  const borrowBy = Object.fromEntries(borrowList.map(b => [b.pool, b]));
-  log(`borrow source: ${borrowUrl || "none"} (${borrowList.length} records)`);
-  if (borrowList.length) log(`borrow record keys: ${Object.keys(borrowList[0]).join(", ")}`);
-
-  const buckets = {};
-  let matched = 0, skipped = 0;
-  for (const p of stacks){
-    const cur = currencyOf(p.symbol);
-    if (!cur){ log(`  skip ${p.symbol}: not mapped to a currency`); skipped++; continue; }
-    const depth = p.tvlUsd ?? 0;
-    if (depth <= 0){ log(`  skip ${p.symbol}: no depth`); skipped++; continue; }
-
-    const bRec = borrowBy[p.pool];
-    const borrowApr = borrowAprOf(bRec);
-    if (borrowApr == null) log(`  ${p.symbol}: no borrow record, supply-only`);
-    else matched++;
-
-    const sym = String(p.symbol).toUpperCase();
-    (buckets[cur] ||= []).push({
-      venue: p.project,
-      asset: p.symbol,
-      pool: p.pool,
-      borrow: borrowApr == null ? null : round(aprToApy(borrowApr)),
-      supply: round(p.apyBase ?? 0),
-      protocolYield: round(p.apyReward ?? 0),
-      ...(YIELD_SOURCE[sym] && { protocolYieldSource: YIELD_SOURCE[sym] }),
-      depthUsd: Math.round(depth),
-      phaseIn: 1
-    });
-  }
-  log(`markets kept: ${Object.values(buckets).flat().length}, with borrow data: ${matched}, skipped: ${skipped}`);
+  if (!markets.length) throw new Error("No markets could be read. Aborting rather than writing an empty fixing.");
 
   const indices = {};
-  for (const [cur, markets] of Object.entries(buckets)){
-    markets.sort((a,b) => b.depthUsd - a.depthUsd);
-    const total = markets.reduce((a,m) => a + m.depthUsd * m.phaseIn, 0);
-    markets.forEach(m => { m.weight = round(m.depthUsd * m.phaseIn / total, 4); });
-
-    /* borrow fixing uses only markets that have a borrow side, reweighted */
-    const withBorrow = markets.filter(m => m.borrow != null);
-    const bTotal = withBorrow.reduce((a,m) => a + m.depthUsd * m.phaseIn, 0);
-    const borrow = bTotal > 0
-      ? round(withBorrow.reduce((a,m) => a + m.borrow * (m.depthUsd*m.phaseIn/bTotal), 0))
-      : null;
-
+  for (const cur of Object.keys(META)){
+    const ms = markets.filter(m => m.currency === cur)
+                      .sort((a,b) => b.depthUsd - a.depthUsd);
+    if (!ms.length) continue;
+    const total = ms.reduce((a,m) => a + m.depthUsd * m.phaseIn, 0);
+    ms.forEach(m => { m.weight = round(m.depthUsd * m.phaseIn / total, 4); });
     indices[META[cur].label] = {
       ...META[cur],
-      borrow,
-      supply: round(markets.reduce((a,m) => a + m.supply * m.weight, 0)),
-      borrowCoverage: round(bTotal / total, 4),
-      markets
+      borrow: round(ms.reduce((a,m) => a + m.borrow * m.weight, 0)),
+      supply: round(ms.reduce((a,m) => a + m.supply * m.weight, 0)),
+      markets: ms.map(({ currency, ...rest }) => rest)
     };
   }
-  if (!Object.keys(indices).length) throw new Error("No index could be computed. Aborting.");
 
   const stamp = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
   const day = stamp.slice(0,10);
@@ -141,13 +126,13 @@ const main = async () => {
     fixing: stamp,
     basis:"APY, annually compounded",
     method:"https://sbor.xyz/llms.txt",
-    source:"DefiLlama yields (chain: Stacks)",
+    source:"Rates read from Zest v0-1-data on Stacks mainnet. Depth from DefiLlama.",
     indices,
     notes:[
+      "Rates are read from contract state, not from any venue's published figure.",
       "Protocol yield belongs to the asset, not the loan, and is excluded from every fixing.",
       "Currencies are never blended into a single figure.",
-      "Borrow rates are published by venues as APR and converted to APY here.",
-      "borrowCoverage is the share of index depth for which a borrow rate was available."
+      "stSTXbtc is collateral only and is excluded from all fixings."
     ]
   };
 
@@ -158,7 +143,7 @@ const main = async () => {
     `SBOR fixing ${stamp}`,
     `currency  borrow%  supply%`,
     ...Object.entries(indices).map(([k,v]) =>
-      `${k.padEnd(9)} ${String(v.borrow ?? "n/a").padEnd(8)} ${v.supply}`),
+      `${k.padEnd(9)} ${String(v.borrow).padEnd(8)} ${v.supply}`),
     `basis=APY source=https://sbor.xyz/api/latest.json`
   ];
   writeFileSync("latest.txt", lines.join("\n") + "\n");
