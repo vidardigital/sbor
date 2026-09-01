@@ -2,41 +2,107 @@
   "name": "SBOR",
   "description": "Stacks Bitcoin Offered Rate. Benchmark lending rate for Stacks. Public good, free to reference.",
   "url": "https://sbor.xyz",
-  "bns": ["sbor.btc", "sbor.stx"],
-  "fixing": "2026-09-01T14:00:00Z",
+  "bns": [
+    "sbor.btc",
+    "sbor.stx"
+  ],
+  "fixing": "2026-09-01T22:38:26Z",
   "basis": "APY, annually compounded",
   "method": "https://sbor.xyz/llms.txt",
+  "source": "DefiLlama yields (chain: Stacks)",
   "indices": {
-    "SBOR-USD": {
-      "currency": "USD",
-      "borrow": 2.71,
-      "supply": 0.73,
+    "SBOR-BTC": {
+      "label": "SBOR-BTC",
+      "currency": "BTC",
+      "headline": "The cost of borrowing bitcoin against Bitcoin-secured collateral.",
+      "borrow": null,
+      "supply": 0,
+      "borrowCoverage": 0,
       "markets": [
-        { "venue": "Zest V2", "asset": "USDCx", "borrow": 2.71, "supply": 0.76, "protocolYield": 0, "depthUsd": 10080000, "weight": 0.9582, "phaseIn": 1 },
-        { "venue": "Zest V2", "asset": "USDh",  "borrow": 2.72, "supply": 0.00, "protocolYield": 0, "depthUsd":   440503, "weight": 0.0418, "phaseIn": 1 }
+        {
+          "venue": "zest-v2",
+          "asset": "SBTC",
+          "pool": "f003d6df-fb8f-4a74-8cfb-aee8cc44f433",
+          "borrow": null,
+          "supply": 0,
+          "protocolYield": 0,
+          "protocolYieldSource": "Bitcoin protocol yield via dual stacking, paid on enrolment",
+          "depthUsd": 52479732,
+          "phaseIn": 1,
+          "weight": 1
+        }
       ]
     },
-    "SBOR-BTC": {
-      "currency": "BTC",
-      "borrow": 1.37,
-      "supply": 0.00,
+    "SBOR-USD": {
+      "label": "SBOR-USD",
+      "currency": "USD",
+      "headline": "The dollar cost of money on Stacks, published every block.",
+      "borrow": null,
+      "supply": 0.73,
+      "borrowCoverage": 0,
       "markets": [
-        { "venue": "Zest V2", "asset": "sBTC", "borrow": 1.37, "supply": 0.00, "protocolYield": 1.00, "protocolYieldSource": "Bitcoin protocol yield via dual stacking, paid on enrolment", "depthUsd": 52570000, "weight": 1, "phaseIn": 1 }
+        {
+          "venue": "zest-v2",
+          "asset": "USDC",
+          "pool": "d45867ba-dd86-45f4-9b89-1893b65eaf69",
+          "borrow": null,
+          "supply": 0.76,
+          "protocolYield": 0,
+          "depthUsd": 10083059,
+          "phaseIn": 1,
+          "weight": 0.9581
+        },
+        {
+          "venue": "zest-v2",
+          "asset": "USDH",
+          "pool": "1ba9932d-5c5c-4668-b1e2-87e1ac23cd72",
+          "borrow": null,
+          "supply": 0,
+          "protocolYield": 0,
+          "depthUsd": 440535,
+          "phaseIn": 1,
+          "weight": 0.0419
+        }
       ]
     },
     "SBOR-STX": {
+      "label": "SBOR-STX",
       "currency": "STX",
-      "borrow": 1.78,
+      "headline": "The cost of money in STX, the chain's own collateral asset.",
+      "borrow": null,
       "supply": 0.66,
+      "borrowCoverage": 0,
       "markets": [
-        { "venue": "Zest V2", "asset": "STX",   "borrow": 2.49, "supply": 1.32, "protocolYield": 0,    "depthUsd": 2490000, "weight": 0.4788, "phaseIn": 1 },
-        { "venue": "Zest V2", "asset": "stSTX", "borrow": 1.12, "supply": 0.06, "protocolYield": 5.06, "protocolYieldSource": "PoX staking yield on the underlying, managed by StackingDAO", "depthUsd": 2710000, "weight": 0.5212, "phaseIn": 1 }
+        {
+          "venue": "zest-v2",
+          "asset": "STSTX",
+          "pool": "c9199d93-6e54-48cf-9063-aba26c9887e5",
+          "borrow": null,
+          "supply": 0.06,
+          "protocolYield": 0,
+          "protocolYieldSource": "PoX staking yield on the underlying, managed by StackingDAO",
+          "depthUsd": 2709806,
+          "phaseIn": 1,
+          "weight": 0.5218
+        },
+        {
+          "venue": "zest-v2",
+          "asset": "STX",
+          "pool": "3020a368-7997-45d2-8f70-0439acb472c2",
+          "borrow": null,
+          "supply": 1.32,
+          "protocolYield": 0,
+          "depthUsd": 2483736,
+          "phaseIn": 1,
+          "weight": 0.4782
+        }
       ]
     }
   },
   "notes": [
     "Protocol yield belongs to the asset, not the loan, and is excluded from every fixing.",
     "Currencies are never blended into a single figure.",
-    "Rates sourced from DefiLlama yields and venue contract state, converted to APY."
+    "Borrow rates are published by venues as APR and converted to APY here.",
+    "borrowCoverage is the share of index depth for which a borrow rate was available."
   ]
 }
