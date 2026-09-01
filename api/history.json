@@ -1,16 +1,16 @@
 [
   {
     "date": "2026-09-01",
-    "SBOR-BTC": {
-      "borrow": null,
-      "supply": 0
-    },
     "SBOR-USD": {
-      "borrow": null,
+      "borrow": 2.67,
       "supply": 0.73
     },
+    "SBOR-BTC": {
+      "borrow": 1.36,
+      "supply": 0
+    },
     "SBOR-STX": {
-      "borrow": null,
+      "borrow": 1.76,
       "supply": 0.66
     }
   }
