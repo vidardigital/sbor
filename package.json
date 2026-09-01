@@ -1,0 +1,8 @@
+{
+  "name": "sbor",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@stacks/transactions": "7.6.0"
+  }
+}
