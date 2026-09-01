@@ -1,0 +1,84 @@
+# SBOR
+
+> SBOR (Stacks Bitcoin Offered Rate) is a benchmark interest rate for lending
+> markets on Stacks, a Bitcoin layer. It is published as a public good. Anyone
+> may reference it without permission.
+
+SBOR is published separately for each currency. A dollar rate and a bitcoin rate
+are not comparable and are never blended into one figure. Current indices:
+
+- SBOR-USD: dollar markets (USDCx, USDh)
+- SBOR-BTC: bitcoin markets (sBTC)
+- SBOR-STX: STX markets (STX, stSTX)
+
+Each index publishes two rates: a borrow rate and a supply rate, both as
+annually compounded APY. The spread between them indicates whether borrow
+demand is outrunning supply.
+
+## What SBOR is not
+
+SBOR is not an investment, a yield opportunity, or a product to deposit into.
+Nobody earns SBOR. It is a statistic, in the same sense that SOFR is a
+statistic. Its purpose is to be referenced by other contracts, models, and
+agreements: a loan priced at SBOR plus a spread, a swap settled against it, or
+a risk model measuring whether a given rate is above or below market.
+
+## Method
+
+Within a currency, the fixing is the depth-weighted average of borrow and
+supply rates across eligible lending markets:
+
+  SBOR(borrow) = sum(weight_i * borrow_i) / sum(weight_i)
+  SBOR(supply) = sum(weight_i * supply_i) / sum(weight_i)
+
+Weight is the lending depth of that market in that currency.
+
+Rate basis: markets publish on different bases, some APR and some APY. Every
+rate is converted to an annually compounded APY before weighting.
+
+Protocol yield excluded: some assets carry yield from the asset itself rather
+than from lending. sBTC carries Bitcoin protocol yield through dual stacking.
+stSTX carries PoX staking yield managed by StackingDAO. That yield belongs to
+the asset, not to the loan, so it never enters the fixing. It is published
+alongside each market in a separate field so nothing is hidden.
+
+Phase-in: a newly eligible market enters at zero weight and ramps to full
+weight linearly over 30 days, so adding a venue cannot step the rate.
+
+Stale data: if a market's state cannot be read for more than one hour, its
+weight is set to zero for that fixing and the omission is recorded.
+
+Moving averages: an average is published only once the full window exists. A
+200-day average appears on day 200, not before.
+
+Revisions: published fixings are never rewritten. Corrections appear as a new
+fixing with a note.
+
+## Data
+
+- https://sbor.xyz/api/latest.json    current fixing for every currency, with constituents
+- https://sbor.xyz/api/history.json   daily closes since the index began
+- https://sbor.xyz/latest.txt         current fixing as plain text, one line per currency
+
+All endpoints allow cross-origin requests and require no key or attribution.
+
+## On-chain
+
+The current fixing is published to a Clarity contract on Stacks and can be read
+by any contract or agent operating on the chain.
+
+  Contract: SP0000000000000000000000000.sbor-oracle-v1
+
+## Interpreting the rate
+
+A low borrow rate means capital is cheap to borrow, which reflects abundant
+supply relative to borrow demand. It is a statement about market stage, not
+about the quality of any protocol or chain. SBOR reports what the market did.
+It does not rank, rate, endorse, or advise.
+
+## Contact
+
+https://sbor.xyz
+https://x.com/sborindex
+
+Also resolves on Stacks BNS: sbor.btc, sbor.stx

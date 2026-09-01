@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SBOR — Stacks Bitcoin Offered Rate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;450;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F1F2ED; --paper-2:#E7E9E1;
+  --ink:#131A1F; --ink-soft:#5C646B;
+  --rule:#CBCFC4; --rule-soft:#DEE1D8;
+  --accent:#1D4E6B; --up:#2E6A4E; --down:#A2452F;
+  --maxw:1120px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--paper);color:var(--ink);font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:16px;line-height:1.55;font-feature-settings:"tnum" 1}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px}
+.num{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+
+header{border-bottom:1px solid var(--rule)}
+.head-in{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:22px 0;flex-wrap:wrap}
+.head-id{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap}
+.mark{font-weight:600;font-size:22px;letter-spacing:.16em}
+.mark span{color:var(--accent)}
+.fullname{font-size:clamp(17px,2vw,21px);font-weight:450;letter-spacing:-.005em}
+.head-right{display:flex;align-items:center;gap:14px}
+.tag{border:1px solid var(--rule);padding:2px 8px;border-radius:2px;font-size:12px;color:var(--ink-soft)}
+.xlink{color:var(--ink-soft);display:inline-flex;padding:5px;border:1px solid var(--rule);border-radius:2px;transition:color .15s,border-color .15s}
+.xlink:hover{color:var(--ink);border-color:var(--ink)}
+.xlink:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.switch{display:flex;border-bottom:1px solid var(--rule);flex-wrap:wrap}
+.switch button{font:inherit;font-size:15px;background:none;border:none;border-bottom:2px solid transparent;color:var(--ink-soft);padding:14px 0;margin-right:32px;cursor:pointer;text-align:left}
+.switch button b{font-weight:500;color:inherit}
+.switch button small{display:block;font-size:12.5px;font-weight:400;opacity:.85}
+.switch button[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.switch button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.fixing{padding:46px 0 42px;border-bottom:1px solid var(--rule)}
+.fixing h1{font-size:clamp(19px,2.4vw,25px);font-weight:450;line-height:1.35;max-width:36ch}
+.stamp{margin-top:10px;color:var(--ink-soft);font-size:13.5px}
+.rates{display:grid;grid-template-columns:1fr 1fr;margin-top:34px;border:1px solid var(--rule);
+  background:repeating-linear-gradient(to bottom,transparent 0 31px,var(--rule-soft) 31px 32px)}
+.rate{padding:26px 26px 22px}
+.rate + .rate{border-left:1px solid var(--rule)}
+.rate-k{font-size:13.5px;color:var(--ink-soft)}
+.rate-v{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;
+  font-size:clamp(50px,9.4vw,98px);line-height:.98;font-weight:500;letter-spacing:-.03em;margin-top:6px;color:var(--accent)}
+.rate-v .pct{font-size:.42em;font-weight:400;letter-spacing:0;margin-left:.08em;color:var(--ink-soft)}
+.delta{margin-top:10px;font-size:14px;font-family:"IBM Plex Mono",monospace}
+.delta.up{color:var(--up)} .delta.down{color:var(--down)}
+.delta em{font-style:normal;color:var(--ink-soft)}
+
+section{padding:44px 0;border-bottom:1px solid var(--rule)}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.sec-h h2{font-size:17px;font-weight:600}
+.sec-h p{color:var(--ink-soft);font-size:13.5px;max-width:54ch}
+.ranges{display:flex;gap:4px}
+.ranges button{font:inherit;font-size:13px;background:none;border:1px solid var(--rule);color:var(--ink-soft);padding:4px 11px;border-radius:2px;cursor:pointer}
+.ranges button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.ranges button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.chart{width:100%;height:280px;display:block;border:1px solid var(--rule)}
+.legend{display:flex;gap:22px;margin-top:12px;font-size:13.5px;color:var(--ink-soft);flex-wrap:wrap}
+.swatch{display:inline-block;width:16px;height:2px;vertical-align:middle;margin-right:7px}
+
+table{width:100%;border-collapse:collapse;font-size:15px}
+th{text-align:left;font-weight:500;font-size:13.5px;color:var(--ink-soft);padding:0 12px 9px 0;border-bottom:1px solid var(--rule);white-space:nowrap}
+th.r,td.r{text-align:right;padding-right:0}
+td{padding:13px 12px 13px 0;border-bottom:1px solid var(--rule-soft);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+.venue{font-weight:500}
+.asset{color:var(--ink-soft);font-size:13px;margin-left:8px}
+.bar{position:relative;display:block;width:100%;max-width:150px;height:7px;background:var(--paper-2);margin-left:auto}
+.bar i{position:absolute;inset:0 auto 0 0;background:var(--accent);display:block}
+.bar.phase i{background:repeating-linear-gradient(45deg,var(--accent) 0 3px,transparent 3px 6px)}
+.foot-note{margin-top:16px;color:var(--ink-soft);font-size:13.5px;max-width:66ch}
+
+.method{display:grid;grid-template-columns:1fr 1fr;gap:40px}
+.method p{max-width:56ch;color:var(--ink-soft);margin-bottom:14px}
+.method p strong{color:var(--ink);font-weight:500}
+.formula{font-family:"IBM Plex Mono",monospace;font-size:13.5px;background:var(--paper-2);border-left:2px solid var(--accent);padding:14px 16px;color:var(--ink);margin:6px 0 18px}
+
+.signup{display:flex;gap:10px;flex-wrap:wrap;max-width:520px}
+.signup input[type=email]{flex:1 1 260px;font:inherit;font-size:15px;padding:11px 13px;border:1px solid var(--rule);background:var(--paper);color:var(--ink);border-radius:2px}
+.signup input[type=email]:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:var(--accent)}
+.signup button{font:inherit;font-size:15px;font-weight:500;padding:11px 22px;cursor:pointer;background:var(--ink);color:var(--paper);border:1px solid var(--ink);border-radius:2px}
+.signup button:hover{background:var(--accent);border-color:var(--accent)}
+.signup button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.hp,.sr{position:absolute;left:-9999px}
+
+footer{padding:36px 0 64px;color:var(--ink-soft);font-size:13.5px}
+.oracle{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;border:1px solid var(--rule);padding:16px 18px;margin-bottom:22px}
+.oracle code{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--ink)}
+a{color:var(--accent)}
+
+@media (max-width:720px){
+  .rates{grid-template-columns:1fr}
+  .rate + .rate{border-left:none;border-top:1px solid var(--rule)}
+  .method{grid-template-columns:1fr;gap:8px}
+  .wrap{padding:0 20px}
+  .switch button{margin-right:22px;font-size:14px}
+  th.hide-sm,td.hide-sm{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap head-in">
+    <div class="head-id">
+      <div class="mark">S<span>·</span>B<span>·</span>O<span>·</span>R</div>
+      <div class="fullname">Stacks Bitcoin Offered Rate</div>
+    </div>
+    <div class="head-right">
+      <span class="tag">Fixing 2026-09-01</span>
+      <a class="xlink" href="https://x.com/sborindex" aria-label="SBOR on X">
+        <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      </a>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav class="switch" id="switch" aria-label="Index currency"></nav>
+</div>
+
+<main>
+  <div class="wrap">
+
+    <div class="fixing">
+      <h1 id="hl"></h1>
+      <p class="stamp">Fixing for <span class="num">2026-09-01 14:00 UTC</span> · overblock tenor · rates normalised to APY</p>
+      <div class="rates">
+        <div class="rate">
+          <div class="rate-k">Borrow APY</div>
+          <div class="rate-v"><span class="num" id="borrowVal">0.00</span><span class="pct">%</span></div>
+          <div class="delta" id="borrowDelta"></div>
+        </div>
+        <div class="rate">
+          <div class="rate-k">Supply APY</div>
+          <div class="rate-v"><span class="num" id="supplyVal">0.00</span><span class="pct">%</span></div>
+          <div class="delta" id="supplyDelta"></div>
+        </div>
+      </div>
+    </div>
+
+    <section>
+      <div class="sec-h">
+        <div>
+          <h2>History</h2>
+          <p>Daily closes since the index began. A moving average is shown only once the full window exists.</p>
+        </div>
+        <div class="ranges" role="group" aria-label="Chart range">
+          <button data-range="30" aria-pressed="false">30D</button>
+          <button data-range="90" aria-pressed="true">90D</button>
+          <button data-range="365" aria-pressed="false">1Y</button>
+        </div>
+      </div>
+      <svg class="chart" id="chart" viewBox="0 0 1120 280" preserveAspectRatio="none" role="img" aria-label="Rate history"></svg>
+      <div class="legend">
+        <span><i class="swatch" style="background:#1D4E6B"></i>Borrow APY</span>
+        <span><i class="swatch" style="background:#5C646B"></i>Supply APY</span>
+        <span><i class="swatch" style="background:#A2452F"></i>Borrow, 30-day average</span>
+      </div>
+    </section>
+
+    <section>
+      <div class="sec-h">
+        <div>
+          <h2>Constituents</h2>
+          <p id="consNote"></p>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Market</th>
+            <th class="r">Borrow APY</th>
+            <th class="r">Supply APY</th>
+            <th class="r hide-sm">Incentive</th>
+            <th class="r hide-sm">Depth</th>
+            <th class="r">Weight</th>
+            <th class="r hide-sm" style="width:170px"></th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <p class="foot-note">Hatched weights are phasing in. A market becomes eligible once its lending depth stays above the inclusion floor for 30 consecutive days. Incentive shows reward-token yield paid by the venue on top of the base rate; it is displayed but excluded from the fixing.</p>
+    </section>
+
+    <section>
+      <div class="sec-h"><div><h2>Methodology</h2></div></div>
+      <div class="method">
+        <div>
+          <p>SBOR is published separately for each currency. A dollar rate and a bitcoin rate are not comparable, so they are never blended into one figure.</p>
+          <p>Within a currency, the fixing is the depth-weighted average of borrow and supply rates across eligible lending markets. Two rates are published rather than one, because the spread between them is itself the signal: it widens when borrow demand outruns supply.</p>
+          <div class="formula">SBOR(borrow) = Σ wᵢ·rᵢ / Σ wᵢ<br>SBOR(supply) = Σ wᵢ·sᵢ / Σ wᵢ</div>
+          <p>Weight <strong>wᵢ</strong> is the lending depth of market <strong>i</strong> in that currency. Rates are read from contract state, not from any venue's published figure.</p>
+        </div>
+        <div>
+          <p><strong>Rate basis.</strong> Markets publish on different bases. Every rate is converted to an annually compounded APY before weighting, so the fixing compares like with like.</p>
+          <p><strong>Incentives excluded.</strong> Reward-token yield paid by a venue is a marketing decision, not the cost of money, so it never enters the fixing. It is shown alongside each market so nothing is hidden.</p>\n          <p><strong>Phase-in.</strong> A newly eligible market enters at zero weight and ramps to full weight linearly over 30 days, so adding a venue cannot step the rate.</p>
+          <p><strong>Moving averages.</strong> An average is published only when the full window exists. A 200-day average appears on day 200, not before.</p>
+          <p><strong>Stale data.</strong> If a market's state cannot be read for more than an hour, its weight is zero for that fixing and the omission is recorded.</p>
+          <p><strong>Revisions.</strong> Published fixings are never rewritten. Corrections appear as a new fixing with a note.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="signup">
+      <div class="sec-h">
+        <div>
+          <h2>Weekly rate report</h2>
+          <p>Monday mornings. Where each currency fixed, how the spread moved over the week, the trend line, and any change to constituents. One email, nothing else.</p>
+        </div>
+      </div>
+      <form class="signup" name="weekly" method="POST" data-netlify="true" netlify-honeypot="company">
+        <input type="hidden" name="form-name" value="weekly">
+        <p class="hp"><label>Leave blank <input name="company" tabindex="-1"></label></p>
+        <label class="sr" for="email">Email address</label>
+        <input id="email" type="email" name="email" required placeholder="you@fund.com" autocomplete="email">
+        <button type="submit">Subscribe</button>
+      </form>
+    </section>
+
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="oracle">
+      <div>On-chain oracle · read any fixing from a Clarity contract<br><code>SP0000000000000000000000000.sbor-oracle-v1</code></div>
+      <div>Free to reference. No permission required.</div>
+    </div>
+    <p>SBOR is published as a public good. Base rates and depth from DefiLlama yields; borrow rates from venue, converted to APY. Fixing dated 2026-09-01.</p>
+  </div>
+</footer>
+
+<script>
+/* Sample data. Replace with data.json from the pipeline.
+   phaseIn 0..1 scales a market's weight while it ramps in over 30 days. */
+/* Zest rows are real, read from the Zest app on 2026-09-01.
+   Zest publishes supply as APY and borrow as APR, so borrow is converted here.
+   "incentive" is reward-token APY shown by the venue on top of the base rate;
+   it is displayed but excluded from the fixing.
+   Granite rows and all depth figures are placeholders pending real data. */
+/* Real data, 2026-09-01.
+   Base supply APY and TVL from DefiLlama yields (chain: Stacks).
+   Borrow from the Zest app, published as APR and converted to APY here.
+   "incentive" is reward-token yield the venue shows on top of the base rate.
+   It is displayed but excluded from the fixing.
+   Granite is not yet indexed in DefiLlama yields and is therefore absent. */
+const INDICES = {
+  USD: {
+    label:"SBOR-USD", sub:"dollar markets",
+    headline:"The dollar cost of money on Stacks, published every block.",
+    note:"Weights track lending depth in each dollar market. USDCx and USDh are treated as one currency.",
+    markets:[
+      { venue:"Zest V2", asset:"USDCx", borrow:2.71, supply:0.76, incentive:0, depth:10.08, phaseIn:1 },
+      { venue:"Zest V2", asset:"USDh",  borrow:2.72, supply:0.00, incentive:0, depth: 0.44, phaseIn:1 }
+    ]
+  },
+  BTC: {
+    label:"SBOR-BTC", sub:"bitcoin markets",
+    headline:"The cost of borrowing bitcoin against Bitcoin-secured collateral.",
+    note:"sBTC is the only sBTC market with a borrow side. stSTXbtc is collateral only and is excluded.",
+    markets:[
+      { venue:"Zest V2", asset:"sBTC", borrow:1.37, supply:0.00, incentive:1.00, depth:52.57, phaseIn:1 }
+    ]
+  },
+  STX: {
+    label:"SBOR-STX", sub:"STX markets",
+    headline:"The cost of money in STX, the chain's own collateral asset.",
+    note:"Weights track lending depth in STX and stSTX markets. Liquid staking yield is not a lending rate and is excluded.",
+    markets:[
+      { venue:"Zest V2", asset:"STX",   borrow:2.49, supply:1.32, incentive:0,    depth:2.49, phaseIn:1 },
+      { venue:"Zest V2", asset:"stSTX", borrow:1.12, supply:0.06, incentive:5.06, depth:2.71, phaseIn:1 }
+    ]
+  }
+};
+
+const fmt = n => n.toFixed(2);
+let current = "USD", currentRange = 90;
+
+function computed(key){
+  const ix = INDICES[key];
+  const raw = ix.markets.map(m => m.depth * m.phaseIn);
+  const sum = raw.reduce((a,b)=>a+b,0);
+  const ms = ix.markets.map((m,i)=>({ ...m, weight: raw[i]/sum }));
+  return { ...ix, markets: ms,
+    borrow: ms.reduce((a,m)=>a+m.borrow*m.weight,0),
+    supply: ms.reduce((a,m)=>a+m.supply*m.weight,0) };
+}
+
+document.getElementById("switch").innerHTML = Object.keys(INDICES).map(k=>`
+  <button data-k="${k}" aria-pressed="${k===current}">
+    <b>${INDICES[k].label}</b><small>${INDICES[k].sub}</small>
+  </button>`).join("");
+
+function series(days, base, amp, seed){
+  let v = base, out = [];
+  for (let i=0;i<days;i++){
+    seed = (seed*9301+49297)%233280;
+    v += ((seed/233280)-0.5)*amp;
+    v = Math.max(base-amp*3, Math.min(base+amp*3, v));
+    out.push(v);
+  }
+  out[out.length-1] = base;
+  return out;
+}
+function movingAvg(arr, w){
+  return arr.map((_,i)=> i < w-1 ? null : arr.slice(i-w+1,i+1).reduce((a,b)=>a+b,0)/w);
+}
+
+const chart = document.getElementById("chart");
+function draw(){
+  const ix = computed(current), days = currentRange;
+  const b = series(days, ix.borrow, Math.max(ix.borrow,1)*0.05, 4711);
+  const s = series(days, ix.supply, Math.max(ix.supply,1)*0.06, 9137);
+  const ma = movingAvg(b, 30);
+  const all = b.concat(s);
+  const span = (Math.max(...all)-Math.min(...all)) || 1;
+  const lo = Math.min(...all) - span*0.25, hi = Math.max(...all) + span*0.25;
+  const W=1120,H=280,PL=58,PR=14,PT=18,PB=26;
+  const x = i => PL + i*(W-PL-PR)/(days-1);
+  const y = v => PT + (hi-v)*(H-PT-PB)/(hi-lo);
+  const path = arr => { let d="",pen=false;
+    arr.forEach((v,i)=>{ if(v==null){pen=false;return;}
+      d += (pen?"L":"M") + x(i).toFixed(1)+" "+y(v).toFixed(1)+" "; pen=true; });
+    return d.trim(); };
+
+  let g = "";
+  for (let t=0;t<=4;t++){
+    const v = lo+(hi-lo)*t/4, yy = y(v);
+    g += `<line x1="${PL}" y1="${yy}" x2="${W-PR}" y2="${yy}" stroke="#DEE1D8"/>`;
+    g += `<text x="${PL-10}" y="${yy+4}" text-anchor="end" font-family="IBM Plex Mono" font-size="11" fill="#5C646B">${v.toFixed(1)}%</text>`;
+  }
+  const lbl = days===30?"30 days":days===90?"90 days":"1 year";
+  g += `<text x="${PL}" y="${H-8}" font-family="IBM Plex Sans" font-size="11" fill="#5C646B">${lbl} ago</text>`;
+  g += `<text x="${W-PR}" y="${H-8}" text-anchor="end" font-family="IBM Plex Sans" font-size="11" fill="#5C646B">today</text>`;
+  if (days > 30) g += `<path d="${path(ma)}" fill="none" stroke="#A2452F" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+  g += `<path d="${path(s)}" fill="none" stroke="#5C646B" stroke-width="1.5"/>`;
+  g += `<path d="${path(b)}" fill="none" stroke="#1D4E6B" stroke-width="2"/>`;
+  chart.innerHTML = g;
+}
+
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+function settle(el, target){
+  if (reduce){ el.textContent = fmt(target); return; }
+  const t0 = performance.now(), D = 700;
+  (function step(t){
+    const k = Math.min(1,(t-t0)/D), e = 1-Math.pow(1-k,3);
+    el.textContent = fmt(target*e);
+    if (k<1) requestAnimationFrame(step);
+  })(t0);
+}
+
+function render(){
+  const ix = computed(current);
+  document.getElementById("hl").textContent = ix.headline;
+  document.getElementById("consNote").textContent = ix.note;
+  settle(document.getElementById("borrowVal"), ix.borrow);
+  settle(document.getElementById("supplyVal"), ix.supply);
+  const bd = document.getElementById("borrowDelta"), sd = document.getElementById("supplyDelta");
+  bd.className = "delta up";   bd.innerHTML = "+0.18 <em>vs. 7d avg</em>";
+  sd.className = "delta down"; sd.innerHTML = "−0.06 <em>vs. 7d avg</em>";
+  document.getElementById("rows").innerHTML = ix.markets.map(m=>`
+    <tr>
+      <td><span class="venue">${m.venue}</span><span class="asset">${m.asset}</span></td>
+      <td class="r num">${fmt(m.borrow)}%</td>
+      <td class="r num">${fmt(m.supply)}%</td>
+      <td class="r num hide-sm">${m.incentive ? "+"+fmt(m.incentive)+"%" : "&mdash;"}</td>
+      <td class="r num hide-sm">$${m.depth.toFixed(2)}M</td>
+      <td class="r num">${(m.weight*100).toFixed(1)}%</td>
+      <td class="r hide-sm"><span class="bar${m.phaseIn<1?" phase":""}"><i style="width:${(m.weight*100).toFixed(1)}%"></i></span></td>
+    </tr>`).join("");
+  draw();
+}
+
+document.getElementById("switch").addEventListener("click", e=>{
+  const btn = e.target.closest("button"); if(!btn) return;
+  current = btn.dataset.k;
+  document.querySelectorAll("#switch button").forEach(b=>b.setAttribute("aria-pressed", b===btn));
+  render();
+});
+document.querySelectorAll(".ranges button").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll(".ranges button").forEach(b=>b.setAttribute("aria-pressed","false"));
+    btn.setAttribute("aria-pressed","true");
+    currentRange = +btn.dataset.range;
+    draw();
+  });
+});
+
+/* Load the live fixing. Falls back to the bundled snapshot if unavailable. */
+async function boot(){
+  try{
+    const r = await fetch("api/latest.json", { cache: "no-store" });
+    if(!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    const map = { "SBOR-USD":"USD", "SBOR-BTC":"BTC", "SBOR-STX":"STX" };
+    let any = false;
+    for (const [label, ix] of Object.entries(d.indices || {})){
+      const k = map[label]; if(!k || !INDICES[k]) continue;
+      INDICES[k].markets = ix.markets.map(m => ({
+        venue: m.venue, asset: m.asset,
+        borrow: m.borrow, supply: m.supply,
+        incentive: m.protocolYield || 0,
+        depth: (m.depthUsd || 0) / 1e6,
+        phaseIn: m.phaseIn ?? 1
+      }));
+      any = true;
+    }
+    if (any && d.fixing){
+      document.querySelectorAll(".stamp .num").forEach(el => {
+        el.textContent = d.fixing.replace("T"," ").replace(":00Z"," UTC");
+      });
+      const tag = document.querySelector(".tag");
+      if (tag) tag.textContent = "Fixing " + d.fixing.slice(0,10);
+    }
+  }catch(e){
+    console.warn("Live fixing unavailable, showing bundled snapshot.", e);
+  }
+  render();
+}
+boot();
+</script>
+</body>
+</html>

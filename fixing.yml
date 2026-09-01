@@ -1,0 +1,34 @@
+name: SBOR daily fixing
+
+on:
+  schedule:
+    - cron: "0 14 * * *"     # 14:00 UTC daily
+  workflow_dispatch:          # lets you run it by hand from the Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  fixing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Compute fixing
+        run: node scripts/fetch.mjs
+
+      - name: Commit if changed
+        run: |
+          git config user.name  "sbor-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add api/latest.json api/history.json latest.txt
+          if git diff --staged --quiet; then
+            echo "No change, nothing to commit."
+          else
+            git commit -m "fixing $(date -u +%Y-%m-%d)"
+            git push
+          fi

@@ -1,0 +1,42 @@
+{
+  "name": "SBOR",
+  "description": "Stacks Bitcoin Offered Rate. Benchmark lending rate for Stacks. Public good, free to reference.",
+  "url": "https://sbor.xyz",
+  "bns": ["sbor.btc", "sbor.stx"],
+  "fixing": "2026-09-01T14:00:00Z",
+  "basis": "APY, annually compounded",
+  "method": "https://sbor.xyz/llms.txt",
+  "indices": {
+    "SBOR-USD": {
+      "currency": "USD",
+      "borrow": 2.71,
+      "supply": 0.73,
+      "markets": [
+        { "venue": "Zest V2", "asset": "USDCx", "borrow": 2.71, "supply": 0.76, "protocolYield": 0, "depthUsd": 10080000, "weight": 0.9582, "phaseIn": 1 },
+        { "venue": "Zest V2", "asset": "USDh",  "borrow": 2.72, "supply": 0.00, "protocolYield": 0, "depthUsd":   440503, "weight": 0.0418, "phaseIn": 1 }
+      ]
+    },
+    "SBOR-BTC": {
+      "currency": "BTC",
+      "borrow": 1.37,
+      "supply": 0.00,
+      "markets": [
+        { "venue": "Zest V2", "asset": "sBTC", "borrow": 1.37, "supply": 0.00, "protocolYield": 1.00, "protocolYieldSource": "Bitcoin protocol yield via dual stacking, paid on enrolment", "depthUsd": 52570000, "weight": 1, "phaseIn": 1 }
+      ]
+    },
+    "SBOR-STX": {
+      "currency": "STX",
+      "borrow": 1.78,
+      "supply": 0.66,
+      "markets": [
+        { "venue": "Zest V2", "asset": "STX",   "borrow": 2.49, "supply": 1.32, "protocolYield": 0,    "depthUsd": 2490000, "weight": 0.4788, "phaseIn": 1 },
+        { "venue": "Zest V2", "asset": "stSTX", "borrow": 1.12, "supply": 0.06, "protocolYield": 5.06, "protocolYieldSource": "PoX staking yield on the underlying, managed by StackingDAO", "depthUsd": 2710000, "weight": 0.5212, "phaseIn": 1 }
+      ]
+    }
+  },
+  "notes": [
+    "Protocol yield belongs to the asset, not the loan, and is excluded from every fixing.",
+    "Currencies are never blended into a single figure.",
+    "Rates sourced from DefiLlama yields and venue contract state, converted to APY."
+  ]
+}
