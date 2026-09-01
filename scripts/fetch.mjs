@@ -6,23 +6,17 @@
  */
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 
-const POOLS  = "https://yields.llama.fi/pools";
-/* DefiLlama has used both paths for the lend/borrow dataset. Try in order. */
+const POOLS = "https://yields.llama.fi/pools";
 const BORROW_URLS = [
   "https://yields.llama.fi/lendBorrow",
   "https://yields.llama.fi/poolsBorrow"
 ];
 
-/* Which asset symbols belong to which currency index.
-   Symbols are upper-cased before matching. */
 const CURRENCY = {
   "USD": ["USDCX", "USDH", "USDC", "USDT", "AEUSDC"],
   "BTC": ["SBTC", "WBTC", "XBTC"],
   "STX": ["STX", "STSTX"]
 };
-
-/* Assets that are collateral only and have no meaningful borrow market.
-   They are excluded from the fixing but still reported. */
 const COLLATERAL_ONLY = ["STSTXBTC"];
 
 const META = {
@@ -41,124 +35,140 @@ const YIELD_SOURCE = {
 
 const round = (n, d = 2) => Number(n.toFixed(d));
 const aprToApy = apr => (Math.pow(1 + apr / 100 / 365, 365) - 1) * 100;
+const log = (...a) => console.error(...a);
 
-async function getJson(url) {
-  const r = await fetch(url, { headers: { "accept": "application/json" } });
-  if (!r.ok) throw new Error(`${url} responded ${r.status}`);
+async function getJson(url){
+  const r = await fetch(url, { headers:{ accept:"application/json" } });
+  if(!r.ok) throw new Error(`${url} responded ${r.status}`);
   return r.json();
 }
 
-function currencyOf(symbol) {
-  const s = symbol.toUpperCase();
+function currencyOf(symbol){
+  const s = String(symbol).toUpperCase();
   if (COLLATERAL_ONLY.includes(s)) return null;
   for (const [cur, syms] of Object.entries(CURRENCY)) if (syms.includes(s)) return cur;
   return null;
 }
 
+/* Pull a borrow APR out of whatever shape the record has. */
+function borrowAprOf(rec){
+  if (!rec) return null;
+  for (const k of ["apyBaseBorrow","apyBorrow","borrowApy","apyBaseBorrowUsd"]){
+    if (typeof rec[k] === "number") return rec[k];
+  }
+  return null;
+}
+
 const main = async () => {
   const poolsRes = await getJson(POOLS);
+  const stacks = (poolsRes.data || []).filter(p => p.chain === "Stacks");
+  log(`Stacks pools found: ${stacks.length}`);
+  if (!stacks.length) throw new Error("No Stacks pools returned. Aborting rather than writing an empty fixing.");
+  for (const p of stacks){
+    log(`  ${p.project} ${p.symbol} tvl=${Math.round(p.tvlUsd||0)} apyBase=${p.apyBase} apyReward=${p.apyReward} pool=${p.pool}`);
+  }
 
   let borrowRes = null, borrowUrl = null;
-  for (const url of BORROW_URLS) {
+  for (const url of BORROW_URLS){
     try { borrowRes = await getJson(url); borrowUrl = url; break; }
-    catch (e) { console.error(`borrow source ${url} unavailable: ${e.message}`); }
+    catch(e){ log(`borrow source ${url} unavailable: ${e.message}`); }
   }
-  if (!borrowRes) throw new Error("No borrow dataset available from any known endpoint.");
-  console.error(`borrow source: ${borrowUrl}`);
-
-  const stacks = (poolsRes.data || []).filter(p => p.chain === "Stacks");
-  if (!stacks.length) throw new Error("No Stacks pools returned. Aborting rather than writing an empty fixing.");
-
-  /* index borrow data by pool id */
-  const borrowList = Array.isArray(borrowRes) ? borrowRes : (borrowRes.data || []);
+  const borrowList = !borrowRes ? []
+    : (Array.isArray(borrowRes) ? borrowRes : (borrowRes.data || []));
   const borrowBy = Object.fromEntries(borrowList.map(b => [b.pool, b]));
+  log(`borrow source: ${borrowUrl || "none"} (${borrowList.length} records)`);
+  if (borrowList.length) log(`borrow record keys: ${Object.keys(borrowList[0]).join(", ")}`);
 
   const buckets = {};
-  for (const p of stacks) {
+  let matched = 0, skipped = 0;
+  for (const p of stacks){
     const cur = currencyOf(p.symbol);
-    if (!cur) continue;
+    if (!cur){ log(`  skip ${p.symbol}: not mapped to a currency`); skipped++; continue; }
+    const depth = p.tvlUsd ?? 0;
+    if (depth <= 0){ log(`  skip ${p.symbol}: no depth`); skipped++; continue; }
 
-    const b = borrowBy[p.pool] || {};
-    /* DefiLlama reports apyBaseBorrow as an APR. Convert to APY. */
-    const borrowApr = b.apyBaseBorrow ?? null;
-    if (borrowApr == null) continue;              // no borrow side, not a lending market
+    const bRec = borrowBy[p.pool];
+    const borrowApr = borrowAprOf(bRec);
+    if (borrowApr == null) log(`  ${p.symbol}: no borrow record, supply-only`);
+    else matched++;
 
-    const supply    = p.apyBase ?? 0;             // base lending yield only
-    const protocol  = p.apyReward ?? 0;           // yield carried by the asset, excluded
-    const depth     = p.tvlUsd ?? 0;
-    if (depth <= 0) continue;
-
+    const sym = String(p.symbol).toUpperCase();
     (buckets[cur] ||= []).push({
       venue: p.project,
       asset: p.symbol,
       pool: p.pool,
-      borrow: round(aprToApy(borrowApr)),
-      supply: round(supply),
-      protocolYield: round(protocol),
-      ...(YIELD_SOURCE[p.symbol.toUpperCase()] && { protocolYieldSource: YIELD_SOURCE[p.symbol.toUpperCase()] }),
+      borrow: borrowApr == null ? null : round(aprToApy(borrowApr)),
+      supply: round(p.apyBase ?? 0),
+      protocolYield: round(p.apyReward ?? 0),
+      ...(YIELD_SOURCE[sym] && { protocolYieldSource: YIELD_SOURCE[sym] }),
       depthUsd: Math.round(depth),
       phaseIn: 1
     });
   }
+  log(`markets kept: ${Object.values(buckets).flat().length}, with borrow data: ${matched}, skipped: ${skipped}`);
 
   const indices = {};
-  for (const [cur, markets] of Object.entries(buckets)) {
-    markets.sort((a, b) => b.depthUsd - a.depthUsd);
-    const total = markets.reduce((a, m) => a + m.depthUsd * m.phaseIn, 0);
+  for (const [cur, markets] of Object.entries(buckets)){
+    markets.sort((a,b) => b.depthUsd - a.depthUsd);
+    const total = markets.reduce((a,m) => a + m.depthUsd * m.phaseIn, 0);
     markets.forEach(m => { m.weight = round(m.depthUsd * m.phaseIn / total, 4); });
+
+    /* borrow fixing uses only markets that have a borrow side, reweighted */
+    const withBorrow = markets.filter(m => m.borrow != null);
+    const bTotal = withBorrow.reduce((a,m) => a + m.depthUsd * m.phaseIn, 0);
+    const borrow = bTotal > 0
+      ? round(withBorrow.reduce((a,m) => a + m.borrow * (m.depthUsd*m.phaseIn/bTotal), 0))
+      : null;
+
     indices[META[cur].label] = {
       ...META[cur],
-      borrow: round(markets.reduce((a, m) => a + m.borrow * m.weight, 0)),
-      supply: round(markets.reduce((a, m) => a + m.supply * m.weight, 0)),
+      borrow,
+      supply: round(markets.reduce((a,m) => a + m.supply * m.weight, 0)),
+      borrowCoverage: round(bTotal / total, 4),
       markets
     };
   }
   if (!Object.keys(indices).length) throw new Error("No index could be computed. Aborting.");
 
-  const now = new Date();
-  const stamp = now.toISOString().replace(/\.\d{3}Z$/, "Z");
-  const day = stamp.slice(0, 10);
+  const stamp = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
+  const day = stamp.slice(0,10);
 
   const latest = {
-    name: "SBOR",
-    description: "Stacks Bitcoin Offered Rate. Benchmark lending rate for Stacks. Public good, free to reference.",
-    url: "https://sbor.xyz",
-    bns: ["sbor.btc", "sbor.stx"],
+    name:"SBOR",
+    description:"Stacks Bitcoin Offered Rate. Benchmark lending rate for Stacks. Public good, free to reference.",
+    url:"https://sbor.xyz",
+    bns:["sbor.btc","sbor.stx"],
     fixing: stamp,
-    basis: "APY, annually compounded",
-    method: "https://sbor.xyz/llms.txt",
-    source: "DefiLlama yields (chain: Stacks)",
+    basis:"APY, annually compounded",
+    method:"https://sbor.xyz/llms.txt",
+    source:"DefiLlama yields (chain: Stacks)",
     indices,
-    notes: [
+    notes:[
       "Protocol yield belongs to the asset, not the loan, and is excluded from every fixing.",
       "Currencies are never blended into a single figure.",
-      "Borrow rates are published by venues as APR and converted to APY here."
+      "Borrow rates are published by venues as APR and converted to APY here.",
+      "borrowCoverage is the share of index depth for which a borrow rate was available."
     ]
   };
 
-  mkdirSync("api", { recursive: true });
+  mkdirSync("api", { recursive:true });
   writeFileSync("api/latest.json", JSON.stringify(latest, null, 2) + "\n");
 
-  /* plain text */
   const lines = [
     `SBOR fixing ${stamp}`,
     `currency  borrow%  supply%`,
-    ...Object.entries(indices).map(([k, v]) =>
-      `${k.padEnd(9)} ${String(v.borrow).padEnd(8)} ${v.supply}`),
+    ...Object.entries(indices).map(([k,v]) =>
+      `${k.padEnd(9)} ${String(v.borrow ?? "n/a").padEnd(8)} ${v.supply}`),
     `basis=APY source=https://sbor.xyz/api/latest.json`
   ];
   writeFileSync("latest.txt", lines.join("\n") + "\n");
 
-  /* history: one row per day, last write for that day wins */
   let history = [];
-  try { history = JSON.parse(readFileSync("api/history.json", "utf8")); } catch {}
+  try { history = JSON.parse(readFileSync("api/history.json","utf8")); } catch {}
   history = history.filter(r => r.date !== day);
-  history.push({
-    date: day,
-    ...Object.fromEntries(Object.entries(indices).map(([k, v]) =>
-      [k, { borrow: v.borrow, supply: v.supply }]))
-  });
-  history.sort((a, b) => a.date.localeCompare(b.date));
+  history.push({ date: day, ...Object.fromEntries(Object.entries(indices)
+    .map(([k,v]) => [k, { borrow:v.borrow, supply:v.supply }])) });
+  history.sort((a,b) => a.date.localeCompare(b.date));
   writeFileSync("api/history.json", JSON.stringify(history, null, 2) + "\n");
 
   console.log(lines.join("\n"));
