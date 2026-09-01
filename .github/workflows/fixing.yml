@@ -2,8 +2,8 @@ name: SBOR daily fixing
 
 on:
   schedule:
-    - cron: "0 14 * * *"     # 14:00 UTC daily
-  workflow_dispatch:          # lets you run it by hand from the Actions tab
+    - cron: "0 14 * * *"
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -16,7 +16,10 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
 
       - name: Compute fixing
         run: node scripts/fetch.mjs
