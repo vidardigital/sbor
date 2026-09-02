@@ -26,6 +26,18 @@ const ZEST = {
   ]
 };
 
+/* Granite. Single USDCx market. Rates are derived from the interest rate
+   curve and current utilisation, exactly as Granite's own math SDK does. */
+const GRANITE = {
+  venue: "Granite",
+  deployer: "SPSX722NK9V3A8D3CVQT0CDY4EBQ3E9FSDDE61FT",
+  irContract: "linear-kinked-ir-v1",
+  stateContract: "state-v1",
+  asset: "USDCx",
+  currency: "USD"
+};
+const SECONDS_IN_YEAR = 31_536_000;
+
 /* DefiLlama symbol -> our symbol, for matching depth */
 const DEPTH_ALIAS = { SBTC:"sBTC", USDC:"USDCx", USDH:"USDh", STX:"STX", STSTX:"stSTX", STSTXBTC:"stSTXbtc" };
 
@@ -44,6 +56,9 @@ const YIELD_SOURCE = {
 };
 
 const round = (n, d = 2) => Number(Number(n).toFixed(d));
+/* One run per day is the official fixing and is the only run written to
+   history. Other runs refresh the current reading only. */
+const IS_FIXING = process.env.SBOR_FIXING === "1";
 const log = (...a) => console.error(...a);
 
 async function depthBySymbol(){
@@ -76,6 +91,51 @@ async function apysFor(asset){
   return { supply, borrow };
 }
 
+/* Read a read-only function and return the plain JS value. */
+async function readOnly(address, contract, fn, args = []){
+  const res = await fetchCallReadOnlyFunction({
+    contractAddress: address, contractName: contract, functionName: fn,
+    functionArgs: args, senderAddress: address, network: "mainnet"
+  });
+  return cvToValue(res, true);
+}
+
+const numOf = v => Number(v?.value ?? v);
+
+async function graniteMarket(){
+  const ir  = await readOnly(GRANITE.deployer, GRANITE.irContract, "get-ir-params");
+  const st0 = await readOnly(GRANITE.deployer, GRANITE.stateContract, "get-accrue-interest-params");
+  const st  = st0?.value ?? st0;
+
+  log("  granite raw ir-params:", JSON.stringify(ir));
+  log("  granite raw accrue-params:", JSON.stringify(st));
+
+  /* on-chain fixed point: rate params use 1e12, balances use token decimals */
+  const ONE12 = 1e12;
+  const baseIR = numOf(ir["base-ir"]) / ONE12;
+  const slope1 = numOf(ir["ir-slope-1"]) / ONE12;
+  const slope2 = numOf(ir["ir-slope-2"]) / ONE12;
+  const kink   = numOf(ir["utilization-kink"]) / ONE12;
+
+  const totalAssets = numOf(st["total-assets"]);
+  const openInterest = numOf(st["lp-interest"]) + numOf(st["staked-interest"]) + numOf(st["protocol-interest"]);
+  const reservePct = numOf(st["protocol-reserve-percentage"]) / ONE12;
+
+  const ur = totalAssets > 0 ? openInterest / totalAssets : 0;
+  const apr = ur < kink
+    ? slope1 * ur + baseIR
+    : slope2 * (ur - kink) + slope1 * kink + baseIR;
+
+  const borrow = ((1 + apr / SECONDS_IN_YEAR) ** SECONDS_IN_YEAR - 1) * 100;
+  const lpApr  = apr * (1 - reservePct) * ur;
+  const supply = ur === 0 ? 0 : ((1 + lpApr / SECONDS_IN_YEAR) ** SECONDS_IN_YEAR - 1) * 100;
+
+  log(`  granite derived: ur=${(ur*100).toFixed(2)}% apr=${(apr*100).toFixed(2)}% ` +
+      `borrow=${borrow.toFixed(2)}% supply=${supply.toFixed(2)}% reservePct=${(reservePct*100).toFixed(2)}%`);
+
+  return { borrow, supply, totalAssetsRaw: totalAssets };
+}
+
 const main = async () => {
   const depth = await depthBySymbol();
   log("depth from DefiLlama:", JSON.stringify(depth));
@@ -98,6 +158,24 @@ const main = async () => {
       log(`  ${a.symbol}: read failed, excluded. ${e.message}`);
     }
   }
+  /* Granite, USDCx market. Depth read on-chain, USDCx is dollar denominated. */
+  try {
+    const g = await graniteMarket();
+    const depthUsd = Math.round(g.totalAssetsRaw / 1e6);   // USDCx has 6 decimals
+    if (depthUsd > 0 && Number.isFinite(g.borrow) && Number.isFinite(g.supply)){
+      log(`  Granite ${GRANITE.asset}: supply=${round(g.supply)}% borrow=${round(g.borrow)}% depth=${depthUsd}`);
+      markets.push({
+        venue: GRANITE.venue, asset: GRANITE.asset, currency: GRANITE.currency,
+        borrow: round(g.borrow), supply: round(g.supply),
+        depthUsd, phaseIn: 1
+      });
+    } else {
+      log(`  Granite: implausible values, excluded. depth=${depthUsd} borrow=${g.borrow} supply=${g.supply}`);
+    }
+  } catch(e){
+    log(`  Granite: read failed, excluded. ${e.message}`);
+  }
+
   if (!markets.length) throw new Error("No markets could be read. Aborting rather than writing an empty fixing.");
 
   const indices = {};
@@ -107,10 +185,13 @@ const main = async () => {
     if (!ms.length) continue;
     const total = ms.reduce((a,m) => a + m.depthUsd * m.phaseIn, 0);
     ms.forEach(m => { m.weight = round(m.depthUsd * m.phaseIn / total, 4); });
+    const venues = [...new Set(ms.map(m => m.venue))];
     indices[META[cur].label] = {
       ...META[cur],
       borrow: round(ms.reduce((a,m) => a + m.borrow * m.weight, 0)),
       supply: round(ms.reduce((a,m) => a + m.supply * m.weight, 0)),
+      venues,
+      largestConstituentWeight: round(Math.max(...ms.map(m => m.weight)), 4),
       markets: ms.map(({ currency, ...rest }) => rest)
     };
   }
@@ -124,11 +205,13 @@ const main = async () => {
     url:"https://sbor.xyz",
     bns:["sbor.btc","sbor.stx"],
     fixing: stamp,
+    isDailyFixing: IS_FIXING,
     basis:"APY, annually compounded",
     method:"https://sbor.xyz/llms.txt",
-    source:"Rates read from Zest v0-1-data on Stacks mainnet. Depth from DefiLlama.",
+    source:"Rates read from lending contract state on Stacks mainnet. Zest depth from DefiLlama, Granite depth read on-chain.",
     indices,
     notes:[
+      "The daily fixing at 14:00 UTC is the official reference. Other readings are intraday refreshes.",
       "Rates are read from contract state, not from any venue's published figure.",
       "Protocol yield belongs to the asset, not the loan, and is excluded from every fixing.",
       "Currencies are never blended into a single figure.",
@@ -148,16 +231,20 @@ const main = async () => {
   ];
   writeFileSync("latest.txt", lines.join("\n") + "\n");
 
-  let history = [];
-  try { history = JSON.parse(readFileSync("api/history.json","utf8")); } catch {}
-  history = history.filter(r => r.date !== day);
-  history.push({ date: day, ...Object.fromEntries(Object.entries(indices)
-    .map(([k,v]) => [k, { borrow:v.borrow, supply:v.supply }])) });
-  history.sort((a,b) => a.date.localeCompare(b.date));
-  writeFileSync("api/history.json", JSON.stringify(history, null, 2) + "\n");
+  if (IS_FIXING){
+    let history = [];
+    try { history = JSON.parse(readFileSync("api/history.json","utf8")); } catch {}
+    history = history.filter(r => r.date !== day);
+    history.push({ date: day, ...Object.fromEntries(Object.entries(indices)
+      .map(([k,v]) => [k, { borrow:v.borrow, supply:v.supply }])) });
+    history.sort((a,b) => a.date.localeCompare(b.date));
+    writeFileSync("api/history.json", JSON.stringify(history, null, 2) + "\n");
+    console.log(`daily fixing recorded, history rows: ${history.length}`);
+  } else {
+    console.log("intraday refresh, history unchanged");
+  }
 
   console.log(lines.join("\n"));
-  console.log(`history rows: ${history.length}`);
 };
 
 main().catch(e => { console.error("FAILED:", e.message); process.exit(1); });
