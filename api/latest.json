@@ -6,7 +6,7 @@
     "sbor.btc",
     "sbor.stx"
   ],
-  "fixing": "2026-09-02T20:58:53Z",
+  "fixing": "2026-09-02T21:01:08Z",
   "isDailyFixing": false,
   "basis": "APY, annually compounded",
   "method": "https://sbor.xyz/llms.txt",
@@ -17,7 +17,7 @@
       "currency": "USD",
       "headline": "The dollar cost of money on Stacks, published every block.",
       "borrow": 2.28,
-      "supply": 0.6,
+      "supply": 0.57,
       "venues": [
         "Zest V2",
         "Granite"
@@ -37,7 +37,7 @@
           "venue": "Granite",
           "asset": "USDCx",
           "borrow": 1.44,
-          "supply": 0.33,
+          "supply": 0.25,
           "depthUsd": 5006296,
           "phaseIn": 1,
           "weight": 0.3224
