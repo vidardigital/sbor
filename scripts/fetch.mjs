@@ -48,7 +48,7 @@ const DEPTH_ALIAS = { SBTC:"sBTC", USDC:"USDCx", USDH:"USDh", STX:"STX", STSTX:"
 
 const META = {
   USD: { label:"SBOR-USD", currency:"USD",
-         headline:"The dollar cost of money on Stacks, published every block." },
+         headline:"The dollar cost of money on Stacks." },
   BTC: { label:"SBOR-BTC", currency:"BTC",
          headline:"The cost of borrowing bitcoin against Bitcoin-secured collateral." },
   STX: { label:"SBOR-STX", currency:"STX",
@@ -232,7 +232,7 @@ const main = async () => {
     source:"Rates read from lending contract state on Stacks mainnet. Zest depth from DefiLlama, Granite depth read on-chain.",
     indices,
     notes:[
-      "The daily fixing at 14:00 UTC is the official reference. Other readings are intraday refreshes.",
+      "The fixing is published once daily at 14:00 UTC.",
       "Rates are read from contract state, not from any venue's published figure.",
       "Protocol yield belongs to the asset, not the loan, and is excluded from every fixing.",
       "Currencies are never blended into a single figure.",
