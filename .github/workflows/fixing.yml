@@ -2,7 +2,7 @@ name: SBOR daily fixing
 
 on:
   schedule:
-    - cron: "0 14 * * *"
+    - cron: "0 14 * * *"     # once daily at 14:00 UTC, the official fixing
   workflow_dispatch:
 
 permissions:
@@ -22,6 +22,10 @@ jobs:
         run: npm install --no-audit --no-fund
 
       - name: Compute fixing
+        env:
+          # Only the 14:00 UTC run writes the official daily fixing to history.
+          # Manual runs also count, so you can force one when testing.
+          SBOR_FIXING: "1"
         run: node scripts/fetch.mjs
 
       - name: Commit if changed
