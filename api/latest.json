@@ -6,7 +6,7 @@
     "sbor.btc",
     "sbor.stx"
   ],
-  "fixing": "2026-09-01T22:49:56Z",
+  "fixing": "2026-09-02T17:31:23Z",
   "basis": "APY, annually compounded",
   "method": "https://sbor.xyz/llms.txt",
   "source": "Rates read from Zest v0-1-data on Stacks mainnet. Depth from DefiLlama.",
@@ -15,26 +15,26 @@
       "label": "SBOR-USD",
       "currency": "USD",
       "headline": "The dollar cost of money on Stacks, published every block.",
-      "borrow": 2.67,
+      "borrow": 2.68,
       "supply": 0.73,
       "markets": [
         {
           "venue": "Zest V2",
           "asset": "USDCx",
-          "borrow": 2.67,
+          "borrow": 2.68,
           "supply": 0.76,
-          "depthUsd": 10083059,
+          "depthUsd": 10083105,
           "phaseIn": 1,
-          "weight": 0.9581
+          "weight": 0.9582
         },
         {
           "venue": "Zest V2",
           "asset": "USDh",
           "borrow": 2.68,
           "supply": 0,
-          "depthUsd": 440535,
+          "depthUsd": 439388,
           "phaseIn": 1,
-          "weight": 0.0419
+          "weight": 0.0418
         }
       ]
     },
@@ -51,7 +51,7 @@
           "borrow": 1.36,
           "supply": 0,
           "protocolYieldSource": "Bitcoin protocol yield via dual stacking, paid on enrolment",
-          "depthUsd": 52479732,
+          "depthUsd": 52875909,
           "phaseIn": 1,
           "weight": 1
         }
@@ -70,18 +70,18 @@
           "borrow": 1.11,
           "supply": 0.06,
           "protocolYieldSource": "PoX staking yield on the underlying, managed by StackingDAO",
-          "depthUsd": 2709806,
+          "depthUsd": 2725422,
           "phaseIn": 1,
-          "weight": 0.5218
+          "weight": 0.5222
         },
         {
           "venue": "Zest V2",
           "asset": "STX",
           "borrow": 2.46,
           "supply": 1.32,
-          "depthUsd": 2483736,
+          "depthUsd": 2493266,
           "phaseIn": 1,
-          "weight": 0.4782
+          "weight": 0.4778
         }
       ]
     }
