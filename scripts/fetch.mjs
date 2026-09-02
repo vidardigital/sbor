@@ -137,7 +137,10 @@ async function graniteMarket(){
 
   const totalAssets = numOf(st["total-assets"]);
   const openInterest = numOf(st["lp-interest"]) + numOf(st["staked-interest"]) + numOf(st["protocol-interest"]);
-  const reservePct = numOf(st["protocol-reserve-percentage"]) / ONE12;
+  /* rate curve params use 1e12; the reserve percentage uses Granite's
+     SCALING-FACTOR of 1e8 */
+  const ONE8 = 1e8;
+  const reservePct = numOf(st["protocol-reserve-percentage"]) / ONE8;
 
   const ur = totalAssets > 0 ? openInterest / totalAssets : 0;
   const apr = ur < kink
