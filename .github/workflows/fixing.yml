@@ -36,6 +36,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "No change, nothing to commit."
           else
-            git commit -m "fixing $(date -u +%Y-%m-%d)"
+            git commit -m "fixing $(date -u +%Y-%m-%d) [skip netlify]"
             git push
           fi
