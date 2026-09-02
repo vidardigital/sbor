@@ -4,6 +4,11 @@
 > markets on Stacks, a Bitcoin layer. It is published as a public good. Anyone
 > may reference it without permission.
 
+Rates are read directly from lending contract state on Stacks mainnet, currently
+Zest and Granite. Depth is read on-chain where available and from DefiLlama
+otherwise. Each index publishes the number of venues it covers and the weight of
+its largest constituent, so concentration is visible rather than implied.
+
 SBOR is published separately for each currency. A dollar rate and a bitcoin rate
 are not comparable and are never blended into one figure. Current indices:
 
@@ -11,8 +16,11 @@ are not comparable and are never blended into one figure. Current indices:
 - SBOR-BTC: bitcoin markets (sBTC)
 - SBOR-STX: STX markets (STX, stSTX)
 
-Each index publishes two rates: a borrow rate and a supply rate, both as
-annually compounded APY. The spread between them indicates whether borrow
+The official fixing is published once daily at 14:00 UTC. Readings are also
+refreshed every six hours, but only the daily fixing is the reference figure
+and only it enters the historical record.
+
+Each index publishes two rates: a borrow rate and a supply rate. The spread between them indicates whether borrow
 demand is outrunning supply.
 
 ## What SBOR is not
@@ -56,18 +64,15 @@ fixing with a note.
 
 ## Data
 
-- https://sbor.xyz/api/latest.json    current fixing for every currency, with constituents
-- https://sbor.xyz/api/history.json   daily closes since the index began
-- https://sbor.xyz/latest.txt         current fixing as plain text, one line per currency
+- /api/latest.json    current fixing for every currency, with constituents
+- /api/history.json   daily closes since the index began
+- /latest.txt         current fixing as plain text, one line per currency
 
 All endpoints allow cross-origin requests and require no key or attribution.
 
-## On-chain
-
-The current fixing is published to a Clarity contract on Stacks and can be read
-by any contract or agent operating on the chain.
-
-  Contract: SP0000000000000000000000000.sbor-oracle-v1
+Each index in latest.json carries a "venues" list and a
+"largestConstituentWeight" field. Read them before quoting a rate: an index
+covering one venue is a reading of that venue, not a market average.
 
 ## Interpreting the rate
 
@@ -78,7 +83,5 @@ It does not rank, rate, endorse, or advise.
 
 ## Contact
 
-https://sbor.xyz
+https://sbor.finance
 https://x.com/sborindex
-
-Also resolves on Stacks BNS: sbor.btc, sbor.stx

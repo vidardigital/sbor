@@ -1,0 +1,4 @@
+# Serve data straight from the repo so a new fixing never needs a deploy.
+/api/latest.json   https://raw.githubusercontent.com/vidardigital/sbor/main/api/latest.json   200
+/api/history.json  https://raw.githubusercontent.com/vidardigital/sbor/main/api/history.json  200
+/latest.txt        https://raw.githubusercontent.com/vidardigital/sbor/main/latest.txt        200

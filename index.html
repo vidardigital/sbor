@@ -98,6 +98,8 @@ tr:last-child td{border-bottom:none}
 footer{padding:36px 0 64px;color:var(--ink-soft);font-size:13.5px}
 .oracle{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;border:1px solid var(--rule);padding:16px 18px;margin-bottom:22px}
 .oracle code{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--ink)}
+.oracle code a{color:var(--accent);text-decoration:none}
+.oracle code a:hover{text-decoration:underline}
 a{color:var(--accent)}
 
 @media (max-width:720px){
@@ -202,7 +204,7 @@ a{color:var(--accent)}
           <p id="t-signup-p"></p>
         </div>
       </div>
-      <form class="signup" name="weekly" method="POST" data-netlify="true" netlify-honeypot="company">
+      <form class="signup" name="weekly" method="POST" action="/success.html" data-netlify="true" netlify-honeypot="company">
         <input type="hidden" name="form-name" value="weekly">
         <p class="hp"><label>Leave blank <input name="company" tabindex="-1"></label></p>
         <label class="sr" for="email">Email</label>
@@ -259,7 +261,7 @@ en:{
   signupH:"Weekly rate report",
   signupP:"Monday mornings. Where each currency fixed, how the spread moved over the week, the trend line, and any change to constituents. One email, nothing else.",
   signupPlaceholder:"you@fund.com", signupBtn:"Subscribe",
-  oracleA:'On-chain oracle · read any fixing from a Clarity contract<br><code>SP0000000000000000000000000.sbor-oracle-v1</code>',
+  oracleA:'Data · machine readable, no key required<br><code><a href="/api/latest.json">/api/latest.json</a> · <a href="/api/history.json">/api/history.json</a> · <a href="/latest.txt">/latest.txt</a> · <a href="/llms.txt">/llms.txt</a></code>',
   oracleB:"Free to reference. No permission required.<br>sbor.xyz · sbor.btc · sbor.stx",
   disclaimer:"SBOR is published as a public good. It is a statistic, not an investment: nobody earns SBOR. Rates are read from contract state on Stacks mainnet. Depth data from DefiLlama."
 },
@@ -295,7 +297,7 @@ pt:{
   signupH:"Relatório semanal de taxas",
   signupP:"Segunda de manhã. Onde cada moeda fechou, como o spread se moveu na semana, a linha de tendência e qualquer mudança nos componentes. Um e-mail, nada além disso.",
   signupPlaceholder:"voce@fundo.com", signupBtn:"Assinar",
-  oracleA:'Oráculo on-chain · leia qualquer fixing a partir de um contrato Clarity<br><code>SP0000000000000000000000000.sbor-oracle-v1</code>',
+  oracleA:'Dados · legíveis por máquina, sem necessidade de chave<br><code><a href="/api/latest.json">/api/latest.json</a> · <a href="/api/history.json">/api/history.json</a> · <a href="/latest.txt">/latest.txt</a> · <a href="/llms.txt">/llms.txt</a></code>',
   oracleB:"Livre para referência. Não é preciso pedir permissão.<br>sbor.xyz · sbor.btc · sbor.stx",
   disclaimer:"O SBOR é publicado como bem público. É uma estatística, não um investimento: ninguém recebe SBOR. As taxas são lidas do estado dos contratos na mainnet da Stacks. Dados de profundidade da DefiLlama."
 }};
