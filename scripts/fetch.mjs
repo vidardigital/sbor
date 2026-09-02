@@ -30,7 +30,12 @@ const ZEST = {
    curve and current utilisation, exactly as Granite's own math SDK does. */
 const GRANITE = {
   venue: "Granite",
-  deployer: "SPSX722NK9V3A8D3CVQT0CDY4EBQ3E9FSDDE61FT",
+  /* The USDCx market spans two deployments: v1 holds state-v1, the v2 upgrade
+     redeployed the interest rate module. Try both for each contract. */
+  deployers: [
+    "SPSX722NK9V3A8D3CVQT0CDY4EBQ3E9FSDDE61FT",
+    "SP3M2BYF7RGF8WKW5FVDNJ6WR8D7AR9BHDXAKPXZE"
+  ],
   irContract: "linear-kinked-ir-v1",
   stateContract: "state-v1",
   asset: "USDCx",
@@ -102,9 +107,22 @@ async function readOnly(address, contract, fn, args = []){
 
 const numOf = v => Number(v?.value ?? v);
 
+/* Try each deployer until one answers. */
+async function tryDeployers(contract, fn){
+  const errs = [];
+  for (const d of GRANITE.deployers){
+    try {
+      const v = await readOnly(d, contract, fn);
+      log(`  granite ${contract}.${fn} resolved at ${d}`);
+      return v;
+    } catch(e){ errs.push(`${d}: ${e.message}`); }
+  }
+  throw new Error(`${contract}.${fn} not found. ${errs.join(" | ")}`);
+}
+
 async function graniteMarket(){
-  const ir  = await readOnly(GRANITE.deployer, GRANITE.irContract, "get-ir-params");
-  const st0 = await readOnly(GRANITE.deployer, GRANITE.stateContract, "get-accrue-interest-params");
+  const ir  = await tryDeployers(GRANITE.irContract, "get-ir-params");
+  const st0 = await tryDeployers(GRANITE.stateContract, "get-accrue-interest-params");
   const st  = st0?.value ?? st0;
 
   log("  granite raw ir-params:", JSON.stringify(ir));
