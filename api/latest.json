@@ -6,10 +6,11 @@
     "sbor.btc",
     "sbor.stx"
   ],
-  "fixing": "2026-09-02T17:31:23Z",
+  "fixing": "2026-09-02T20:55:56Z",
+  "isDailyFixing": false,
   "basis": "APY, annually compounded",
   "method": "https://sbor.xyz/llms.txt",
-  "source": "Rates read from Zest v0-1-data on Stacks mainnet. Depth from DefiLlama.",
+  "source": "Rates read from lending contract state on Stacks mainnet. Zest depth from DefiLlama, Granite depth read on-chain.",
   "indices": {
     "SBOR-USD": {
       "label": "SBOR-USD",
@@ -17,13 +18,17 @@
       "headline": "The dollar cost of money on Stacks, published every block.",
       "borrow": 2.68,
       "supply": 0.73,
+      "venues": [
+        "Zest V2"
+      ],
+      "largestConstituentWeight": 0.9582,
       "markets": [
         {
           "venue": "Zest V2",
           "asset": "USDCx",
           "borrow": 2.68,
           "supply": 0.76,
-          "depthUsd": 10083105,
+          "depthUsd": 10083148,
           "phaseIn": 1,
           "weight": 0.9582
         },
@@ -32,7 +37,7 @@
           "asset": "USDh",
           "borrow": 2.68,
           "supply": 0,
-          "depthUsd": 439388,
+          "depthUsd": 439332,
           "phaseIn": 1,
           "weight": 0.0418
         }
@@ -44,6 +49,10 @@
       "headline": "The cost of borrowing bitcoin against Bitcoin-secured collateral.",
       "borrow": 1.36,
       "supply": 0,
+      "venues": [
+        "Zest V2"
+      ],
+      "largestConstituentWeight": 1,
       "markets": [
         {
           "venue": "Zest V2",
@@ -51,7 +60,7 @@
           "borrow": 1.36,
           "supply": 0,
           "protocolYieldSource": "Bitcoin protocol yield via dual stacking, paid on enrolment",
-          "depthUsd": 52875909,
+          "depthUsd": 52489549,
           "phaseIn": 1,
           "weight": 1
         }
@@ -63,6 +72,10 @@
       "headline": "The cost of money in STX, the chain's own collateral asset.",
       "borrow": 1.76,
       "supply": 0.66,
+      "venues": [
+        "Zest V2"
+      ],
+      "largestConstituentWeight": 0.5217,
       "markets": [
         {
           "venue": "Zest V2",
@@ -70,23 +83,24 @@
           "borrow": 1.11,
           "supply": 0.06,
           "protocolYieldSource": "PoX staking yield on the underlying, managed by StackingDAO",
-          "depthUsd": 2725422,
+          "depthUsd": 2723304,
           "phaseIn": 1,
-          "weight": 0.5222
+          "weight": 0.5217
         },
         {
           "venue": "Zest V2",
           "asset": "STX",
           "borrow": 2.46,
           "supply": 1.32,
-          "depthUsd": 2493266,
+          "depthUsd": 2496386,
           "phaseIn": 1,
-          "weight": 0.4778
+          "weight": 0.4783
         }
       ]
     }
   },
   "notes": [
+    "The daily fixing at 14:00 UTC is the official reference. Other readings are intraday refreshes.",
     "Rates are read from contract state, not from any venue's published figure.",
     "Protocol yield belongs to the asset, not the loan, and is excluded from every fixing.",
     "Currencies are never blended into a single figure.",
