@@ -43,6 +43,10 @@ const GRANITE = {
 };
 const SECONDS_IN_YEAR = 31_536_000;
 
+/* Bump whenever the calculation changes. Every fixing records the version it
+   was produced under, so any historical figure can be traced to its method. */
+const METHODOLOGY_VERSION = "1.0.0";
+
 /* DefiLlama symbol -> our symbol, for matching depth */
 const DEPTH_ALIAS = { SBTC:"sBTC", USDC:"USDCx", USDH:"USDh", STX:"STX", STSTX:"stSTX", STSTXBTC:"stSTXbtc" };
 
@@ -50,7 +54,7 @@ const META = {
   USD: { label:"SBOR-USD", currency:"USD",
          headline:"The dollar cost of money on Stacks." },
   BTC: { label:"SBOR-BTC", currency:"BTC",
-         headline:"The cost of borrowing bitcoin against Bitcoin-secured collateral." },
+         headline:"What it costs to borrow sBTC, the bitcoin asset used on Stacks." },
   STX: { label:"SBOR-STX", currency:"STX",
          headline:"The cost of money in STX, the chain's own collateral asset." }
 };
@@ -226,6 +230,7 @@ const main = async () => {
     url:"https://sbor.xyz",
     bns:["sbor.btc","sbor.stx"],
     fixing: stamp,
+    methodologyVersion: METHODOLOGY_VERSION,
     isDailyFixing: IS_FIXING,
     basis:"APY, annually compounded",
     method:"https://sbor.xyz/llms.txt",
@@ -236,12 +241,15 @@ const main = async () => {
       "Rates are read from contract state, not from any venue's published figure.",
       "Protocol yield belongs to the asset, not the loan, and is excluded from every fixing.",
       "Currencies are never blended into a single figure.",
-      "stSTXbtc is collateral only and is excluded from all fixings."
+      "stSTXbtc is collateral only and is excluded from all fixings.",
+      "Rates are quoted on the instrument actually lent. SBOR-BTC measures sBTC, not native bitcoin. SBOR-USD measures USDCx and USDh, not bank dollars."
     ]
   };
 
-  mkdirSync("api", { recursive:true });
-  writeFileSync("api/latest.json", JSON.stringify(latest, null, 2) + "\n");
+  const payload = { schema: "sbor.v1", ...latest };
+  mkdirSync("api/v1", { recursive:true });
+  writeFileSync("api/v1/latest.json", JSON.stringify(payload, null, 2) + "\n");
+  writeFileSync("api/latest.json", JSON.stringify(payload, null, 2) + "\n");  // unversioned alias
 
   const lines = [
     `SBOR fixing ${stamp}`,
@@ -254,12 +262,30 @@ const main = async () => {
 
   if (IS_FIXING){
     let history = [];
-    try { history = JSON.parse(readFileSync("api/history.json","utf8")); } catch {}
+    try { history = JSON.parse(readFileSync("api/v1/history.json","utf8")); }
+    catch { try { history = JSON.parse(readFileSync("api/history.json","utf8")); } catch {} }
     history = history.filter(r => r.date !== day);
-    history.push({ date: day, ...Object.fromEntries(Object.entries(indices)
-      .map(([k,v]) => [k, { borrow:v.borrow, supply:v.supply }])) });
+    history.push({
+      date: day,
+      fixedAt: stamp,
+      methodologyVersion: METHODOLOGY_VERSION,
+      ...Object.fromEntries(Object.entries(indices).map(([k,v]) => [k, {
+        borrow: v.borrow, supply: v.supply,
+        venues: v.venues.length,
+        largestConstituentWeight: v.largestConstituentWeight,
+        depthUsd: v.markets.reduce((a,m)=>a+m.depthUsd,0)
+      }]))
+    });
     history.sort((a,b) => a.date.localeCompare(b.date));
-    writeFileSync("api/history.json", JSON.stringify(history, null, 2) + "\n");
+    const hist = JSON.stringify(history, null, 2) + "\n";
+    writeFileSync("api/v1/history.json", hist);
+    writeFileSync("api/history.json", hist);
+
+    /* Full immutable snapshot of the day, so any past fixing can be audited
+       down to its individual constituents rather than just its headline. */
+    mkdirSync("api/v1/archive", { recursive:true });
+    writeFileSync(`api/v1/archive/${day}.json`, JSON.stringify(payload, null, 2) + "\n");
+    console.log(`archived api/v1/archive/${day}.json`);
     console.log(`daily fixing recorded, history rows: ${history.length}`);
   } else {
     console.log("intraday refresh, history unchanged");
