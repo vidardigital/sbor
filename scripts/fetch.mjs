@@ -7,6 +7,7 @@
  */
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { fetchCallReadOnlyFunction, contractPrincipalCV, cvToValue } from "@stacks/transactions";
+import { poxReference } from "./pox.mjs";
 
 const POOLS_URL = "https://yields.llama.fi/pools";
 
@@ -221,6 +222,12 @@ const main = async () => {
     };
   }
 
+  /* PoX staking yield. Published beside the lending indices, never inside them.
+     A failure here must not stop the fixing. */
+  let pox = null;
+  try { pox = await poxReference(); log(`  PoX reference: ${pox.apy}% APY (cycle ${pox.cycle})`); }
+  catch(e){ log(`  PoX reference unavailable, omitted. ${e.message}`); }
+
   const stamp = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
   const day = stamp.slice(0,10);
 
@@ -236,13 +243,15 @@ const main = async () => {
     method:"https://sbor.xyz/llms.txt",
     source:"Rates read from lending contract state on Stacks mainnet. Zest depth from DefiLlama, Granite depth read on-chain.",
     indices,
+    ...(pox && { poxReference: pox }),
     notes:[
       "The fixing is published once daily at 14:00 UTC.",
       "Rates are read from contract state, not from any venue's published figure.",
       "Protocol yield belongs to the asset, not the loan, and is excluded from every fixing.",
       "Currencies are never blended into a single figure.",
       "stSTXbtc is collateral only and is excluded from all fixings.",
-      "Rates are quoted on the instrument actually lent. SBOR-BTC measures sBTC, not native bitcoin. SBOR-USD measures USDCx and USDh, not bank dollars."
+      "Rates are quoted on the instrument actually lent. SBOR-BTC measures sBTC, not native bitcoin. SBOR-USD measures USDCx and USDh, not bank dollars.",
+      "poxReference is a staking yield, not a lending rate. It is published beside the indices and never blended into them."
     ]
   };
 
@@ -269,6 +278,7 @@ const main = async () => {
       date: day,
       fixedAt: stamp,
       methodologyVersion: METHODOLOGY_VERSION,
+      ...(pox && { "SBOR-POX": { apy: pox.apy, cycle: pox.cycle } }),
       ...Object.fromEntries(Object.entries(indices).map(([k,v]) => [k, {
         borrow: v.borrow, supply: v.supply,
         venues: v.venues.length,
