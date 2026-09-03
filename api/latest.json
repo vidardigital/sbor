@@ -1,4 +1,5 @@
 {
+  "schema": "sbor.v1",
   "name": "SBOR",
   "description": "Stacks Bitcoin Offered Rate. Benchmark lending rate for Stacks. Public good, free to reference.",
   "url": "https://sbor.xyz",
@@ -6,8 +7,9 @@
     "sbor.btc",
     "sbor.stx"
   ],
-  "fixing": "2026-09-02T21:01:08Z",
-  "isDailyFixing": false,
+  "fixing": "2026-09-03T15:18:14Z",
+  "methodologyVersion": "1.0.0",
+  "isDailyFixing": true,
   "basis": "APY, annually compounded",
   "method": "https://sbor.xyz/llms.txt",
   "source": "Rates read from lending contract state on Stacks mainnet. Zest depth from DefiLlama, Granite depth read on-chain.",
@@ -15,23 +17,23 @@
     "SBOR-USD": {
       "label": "SBOR-USD",
       "currency": "USD",
-      "headline": "The dollar cost of money on Stacks, published every block.",
-      "borrow": 2.28,
-      "supply": 0.57,
+      "headline": "The dollar cost of money on Stacks.",
+      "borrow": 2.29,
+      "supply": 0.58,
       "venues": [
         "Zest V2",
         "Granite"
       ],
-      "largestConstituentWeight": 0.6493,
+      "largestConstituentWeight": 0.6498,
       "markets": [
         {
           "venue": "Zest V2",
           "asset": "USDCx",
-          "borrow": 2.68,
-          "supply": 0.76,
-          "depthUsd": 10083148,
+          "borrow": 2.69,
+          "supply": 0.77,
+          "depthUsd": 10105739,
           "phaseIn": 1,
-          "weight": 0.6493
+          "weight": 0.6498
         },
         {
           "venue": "Granite",
@@ -40,14 +42,14 @@
           "supply": 0.25,
           "depthUsd": 5006296,
           "phaseIn": 1,
-          "weight": 0.3224
+          "weight": 0.3219
         },
         {
           "venue": "Zest V2",
           "asset": "USDh",
-          "borrow": 2.68,
+          "borrow": 2.69,
           "supply": 0,
-          "depthUsd": 439332,
+          "depthUsd": 439414,
           "phaseIn": 1,
           "weight": 0.0283
         }
@@ -56,7 +58,7 @@
     "SBOR-BTC": {
       "label": "SBOR-BTC",
       "currency": "BTC",
-      "headline": "The cost of borrowing bitcoin against Bitcoin-secured collateral.",
+      "headline": "What it costs to borrow sBTC, the bitcoin asset used on Stacks.",
       "borrow": 1.36,
       "supply": 0,
       "venues": [
@@ -70,7 +72,7 @@
           "borrow": 1.36,
           "supply": 0,
           "protocolYieldSource": "Bitcoin protocol yield via dual stacking, paid on enrolment",
-          "depthUsd": 52489549,
+          "depthUsd": 53871276,
           "phaseIn": 1,
           "weight": 1
         }
@@ -85,35 +87,36 @@
       "venues": [
         "Zest V2"
       ],
-      "largestConstituentWeight": 0.5217,
+      "largestConstituentWeight": 0.5211,
       "markets": [
         {
           "venue": "Zest V2",
           "asset": "stSTX",
-          "borrow": 1.11,
+          "borrow": 1.12,
           "supply": 0.06,
           "protocolYieldSource": "PoX staking yield on the underlying, managed by StackingDAO",
-          "depthUsd": 2723304,
+          "depthUsd": 2765408,
           "phaseIn": 1,
-          "weight": 0.5217
+          "weight": 0.5211
         },
         {
           "venue": "Zest V2",
           "asset": "STX",
           "borrow": 2.46,
           "supply": 1.32,
-          "depthUsd": 2496386,
+          "depthUsd": 2541227,
           "phaseIn": 1,
-          "weight": 0.4783
+          "weight": 0.4789
         }
       ]
     }
   },
   "notes": [
-    "The daily fixing at 14:00 UTC is the official reference. Other readings are intraday refreshes.",
+    "The fixing is published once daily at 14:00 UTC.",
     "Rates are read from contract state, not from any venue's published figure.",
     "Protocol yield belongs to the asset, not the loan, and is excluded from every fixing.",
     "Currencies are never blended into a single figure.",
-    "stSTXbtc is collateral only and is excluded from all fixings."
+    "stSTXbtc is collateral only and is excluded from all fixings.",
+    "Rates are quoted on the instrument actually lent. SBOR-BTC measures sBTC, not native bitcoin. SBOR-USD measures USDCx and USDh, not bank dollars."
   ]
 }

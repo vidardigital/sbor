@@ -28,5 +28,31 @@
       "borrow": 1.76,
       "supply": 0.66
     }
+  },
+  {
+    "date": "2026-09-03",
+    "fixedAt": "2026-09-03T15:18:14Z",
+    "methodologyVersion": "1.0.0",
+    "SBOR-USD": {
+      "borrow": 2.29,
+      "supply": 0.58,
+      "venues": 2,
+      "largestConstituentWeight": 0.6498,
+      "depthUsd": 15551449
+    },
+    "SBOR-BTC": {
+      "borrow": 1.36,
+      "supply": 0,
+      "venues": 1,
+      "largestConstituentWeight": 1,
+      "depthUsd": 53871276
+    },
+    "SBOR-STX": {
+      "borrow": 1.76,
+      "supply": 0.66,
+      "venues": 1,
+      "largestConstituentWeight": 0.5211,
+      "depthUsd": 5306635
+    }
   }
 ]
