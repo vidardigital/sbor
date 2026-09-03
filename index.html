@@ -270,6 +270,7 @@ en:{
   introUse:"Use it as a yardstick. Borrow above SBOR and you are paying more than the market. Supply below it and you are earning less. The table shows where each venue sits today.",
   stamp:d=>`Rate as of <span class="num">${d}</span> · read from Zest contract state · updated daily`,
   borrowK:"Borrow APY", supplyK:"Supply APY",
+  allIn:v=>`${v.toFixed(2)}% all in, with protocol yield`,
   deltaBorrow:"", deltaSupply:"",
   poxH:"Bitcoin staking yield",
   poxP:"What PoX currently pays STX stakers, in bitcoin, from what miners commit. This is a staking yield on a locked position, not a lending rate, so it sits beside the indices and never inside them.",
@@ -316,6 +317,7 @@ pt:{
   introUse:"Use como régua. Tomar emprestado acima do SBOR significa pagar mais que o mercado. Depositar abaixo dele significa ganhar menos. A tabela mostra onde cada plataforma está hoje.",
   stamp:d=>`Taxa em <span class="num">${d}</span> · lida do estado dos contratos da Zest · atualizada diariamente`,
   borrowK:"APY de empréstimo", supplyK:"APY de depósito",
+  allIn:v=>`${v.toFixed(2)}% no total, com o rendimento do protocolo`,
   deltaBorrow:"", deltaSupply:"",
   poxH:"Rendimento do staking de bitcoin",
   poxP:"O que o PoX paga hoje a quem faz staking de STX, em bitcoin, a partir do que os mineradores comprometem. É um rendimento de staking sobre uma posição travada, não uma taxa de crédito, por isso fica ao lado dos índices e nunca dentro deles.",
@@ -365,9 +367,9 @@ const INDEX_COPY = {
              note:"The instrument is sBTC, not native bitcoin. sBTC is redeemable for bitcoin and carries peg and bridge risk that native bitcoin does not. stSTXbtc is collateral only and is excluded." },
         pt:{ sub:"mercados em sBTC", headline:"Quanto custa tomar sBTC emprestado, o ativo bitcoin usado na Stacks.",
              note:"O instrumento é o sBTC, não o bitcoin nativo. O sBTC é resgatável em bitcoin e carrega risco de paridade e de ponte que o bitcoin nativo não tem. O stSTXbtc serve apenas como garantia e fica de fora." }},
-  STX:{ en:{ sub:"STX markets", headline:"The cost of money in STX, the chain's own collateral asset.",
+  STX:{ en:{ sub:"STX markets", headline:"What money costs in STX, the chain's own collateral.",
              note:"Weights track lending depth in STX and stSTX markets. Liquid staking yield is not a lending rate and is excluded." },
-        pt:{ sub:"mercados em STX", headline:"O custo do dinheiro em STX, o ativo de garantia da própria rede.",
+        pt:{ sub:"mercados em STX", headline:"Quanto custa o dinheiro em STX, a garantia da própria rede.",
              note:"Os pesos acompanham a profundidade de crédito dos mercados em STX e stSTX. Rendimento de staking líquido não é taxa de crédito e fica de fora." }}
 };
 
@@ -397,7 +399,8 @@ function computed(key){
   const ms = ix.markets.map((m,i)=>({ ...m, weight: raw[i]/sum }));
   return { label: ix.label, markets: ms,
     borrow: ms.reduce((a,m)=>a+m.borrow*m.weight,0),
-    supply: ms.reduce((a,m)=>a+m.supply*m.weight,0) };
+    supply: ms.reduce((a,m)=>a+m.supply*m.weight,0),
+    allInSupply: ms.reduce((a,m)=>a+(m.supply+(m.incentive||0))*m.weight,0) };
 }
 
 let HISTORY = [];   /* filled by boot() from api/v1/history.json */
