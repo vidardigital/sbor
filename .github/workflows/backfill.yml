@@ -1,0 +1,29 @@
+name: SBOR backfill (manual)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Reconstruct history from DefiLlama
+        run: node scripts/backfill.mjs
+      - name: Commit if changed
+        run: |
+          git config user.name  "sbor-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add api/v1/backfill.json
+          if git diff --staged --quiet; then
+            echo "No change."
+          else
+            git commit -m "backfill $(date -u +%Y-%m-%d) [skip netlify]"
+            git push
+          fi
