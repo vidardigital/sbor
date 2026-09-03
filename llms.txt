@@ -12,8 +12,11 @@ its largest constituent, so concentration is visible rather than implied.
 SBOR is published separately for each currency. A dollar rate and a bitcoin rate
 are not comparable and are never blended into one figure. Current indices:
 
-- SBOR-USD: dollar markets (USDCx, USDh)
-- SBOR-BTC: bitcoin markets (sBTC)
+- SBOR-USD: dollar markets. The instruments are USDCx and USDh, not bank
+  dollars.
+- SBOR-BTC: sBTC markets. The instrument is sBTC, a Stacks bitcoin asset
+  redeemable for bitcoin, not native bitcoin. It carries peg and bridge risk
+  that native bitcoin does not.
 - SBOR-STX: STX markets (STX, stSTX)
 
 The official fixing is published once daily at 14:00 UTC. Readings are also
@@ -69,6 +72,40 @@ fixing with a note.
 - /latest.txt         current fixing as plain text, one line per currency
 
 All endpoints allow cross-origin requests and require no key or attribution.
+
+## Integration policy
+
+Version 1 is the supported surface. Build against /api/v1/. The unversioned
+paths mirror v1 today and are a convenience, not a contract.
+
+  Stability. Fields in v1 are never removed or repurposed. New fields may be
+  added, so parse defensively and ignore what you do not recognise. A breaking
+  change ships as /api/v2/ and v1 keeps running for at least 12 months
+  afterwards.
+
+  Schedule. The fixing is computed once daily at 14:00 UTC. Every payload
+  carries a "fixing" timestamp. Treat data older than 48 hours as stale and
+  fall back to your own logic.
+
+  Source failure. If a lending market cannot be read, its weight is set to zero
+  for that fixing and the omission is recorded. If no market can be read, no
+  fixing is published and the previous one remains in place rather than being
+  replaced by an empty or partial value.
+
+  Concentration. Every index carries a "venues" list and a
+  "largestConstituentWeight". An index covering one venue is a reading of that
+  venue, not a market average. Check both before quoting a rate.
+
+  Cost and attribution. Free. No key, no rate limit, no registration. There is
+  no plan to charge for the data. Attribution is welcome but not required.
+
+  No warranty. SBOR is provided as is, with no guarantee of accuracy,
+  availability or fitness for any purpose. It is a statistic, not advice. Do
+  not use it as the sole input to anything that moves money without your own
+  validation.
+
+  Contact. Reach the maintainer through https://sbor.xyz before building a
+  dependency, so you can be told directly about changes.
 
 Each index in latest.json carries a "venues" list and a
 "largestConstituentWeight" field. Read them before quoting a rate: an index
