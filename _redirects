@@ -1,9 +1,0 @@
-# Data is served straight from the repo so a new fixing never needs a deploy.
-# v1 is the stable, supported surface. The unversioned paths mirror it.
-/api/v1/latest.json    https://raw.githubusercontent.com/vidardigital/sbor/main/api/v1/latest.json    200
-/api/v1/history.json   https://raw.githubusercontent.com/vidardigital/sbor/main/api/v1/history.json   200
-/api/v1/backfill.json  https://raw.githubusercontent.com/vidardigital/sbor/main/api/v1/backfill.json  200
-/api/latest.json       https://raw.githubusercontent.com/vidardigital/sbor/main/api/v1/latest.json    200
-/api/history.json      https://raw.githubusercontent.com/vidardigital/sbor/main/api/v1/history.json   200
-/latest.txt            https://raw.githubusercontent.com/vidardigital/sbor/main/latest.txt            200
-/weekly.txt            https://raw.githubusercontent.com/vidardigital/sbor/main/weekly.txt            200
