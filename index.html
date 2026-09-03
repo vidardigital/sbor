@@ -37,6 +37,11 @@ header{border-bottom:1px solid var(--rule)}
 .xlink:hover{color:var(--ink);border-color:var(--ink)}
 .xlink:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
+.intro{border-bottom:1px solid var(--rule);background:var(--paper-2)}
+.intro-in{padding:24px 28px 26px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px 40px;align-items:start}
+.intro h2{grid-column:1 / -1;font-size:clamp(18px,2.2vw,22px);font-weight:500;letter-spacing:-.01em;margin-bottom:4px}
+.intro p{font-size:14.5px;color:var(--ink-soft);max-width:52ch;line-height:1.5}
+@media (max-width:720px){.intro-in{grid-template-columns:1fr;padding:20px 20px 22px;gap:8px}}
 .switch{display:flex;border-bottom:1px solid var(--rule);flex-wrap:wrap}
 .switch button{font:inherit;font-size:15px;background:none;border:none;border-bottom:2px solid transparent;color:var(--ink-soft);padding:14px 0;margin-right:32px;cursor:pointer;text-align:left}
 .switch button b{font-weight:500;color:inherit}
@@ -133,6 +138,14 @@ a{color:var(--accent)}
   </div>
 </header>
 
+<div class="intro">
+  <div class="wrap intro-in">
+    <h2 id="t-introH"></h2>
+    <p id="t-introP"></p>
+    <p id="t-introUse"></p>
+  </div>
+</div>
+
 <div class="wrap">
   <nav class="switch" id="switch" aria-label="Index currency"></nav>
 </div>
@@ -170,6 +183,7 @@ a{color:var(--accent)}
         </div>
       </div>
       <svg class="chart" id="chart" viewBox="0 0 1120 280" preserveAspectRatio="none" role="img" aria-label="Rate history"></svg>
+      <p class="coverage" id="chartNote" style="margin:12px 0 0"></p>
       <div class="legend" id="legend"></div>
     </section>
 
@@ -231,11 +245,16 @@ a{color:var(--accent)}
 const I18N = {
 en:{
   fullname:"Stacks Bitcoin Offered Rate",
+  introH:"One number for what money costs on Stacks.",
+  introP:"Every lending market prices differently. SBOR averages them, weighted by size, so you can see the market rate instead of one venue's rate.",
+  introUse:"Use it as a yardstick. Borrow above SBOR and you are paying more than the market. Supply below it and you are earning less. The table shows where each venue sits today.",
   stamp:d=>`Rate as of <span class="num">${d}</span> · read from Zest contract state · updated daily`,
   borrowK:"Borrow APY", supplyK:"Supply APY",
   deltaBorrow:"", deltaSupply:"",
   histH:"History",
   histP:"Daily closes since the index began. A moving average is shown only once the full window exists.",
+  notEnough:"Not enough history yet to draw this range.",
+  backfillNote:(n,total)=>`Shaded span: ${n} of ${total} days reconstructed from DefiLlama daily records. Reconstructed days carry a supply rate only, since no borrow history exists for these markets. Unshaded days are the live record.`,
   legend:["Borrow APY","Supply APY","Borrow, 30-day average"],
   ago:d=>d===30?"30 days ago":d===90?"90 days ago":"1 year ago", today:"today",
   consH:"Constituents",
@@ -252,6 +271,7 @@ en:{
   ],
   methodB:[
     "<strong>Daily fixing.</strong> The official fixing is published once daily at 14:00 UTC. Readings are refreshed every six hours, but only the daily fixing enters the historical record.",
+    "<strong>Instruments, not native assets.</strong> Every rate is quoted on the asset actually lent on Stacks. SBOR-BTC measures sBTC, not native bitcoin, and SBOR-USD measures USDCx and USDh, not bank dollars. Each carries issuance, peg or bridge risk that the underlying asset does not.",
     "<strong>Protocol yield excluded.</strong> Some assets carry yield from the asset itself rather than from lending. sBTC carries Bitcoin protocol yield through dual stacking, and stSTX carries PoX staking yield managed by StackingDAO. That yield belongs to the asset, not the loan, so it never enters the fixing.",
     "<strong>Phase-in.</strong> A newly eligible market enters at zero weight and ramps to full weight linearly over 30 days, so adding a venue cannot step the rate.",
     "<strong>Moving averages.</strong> An average is published only once the full window exists. A 200-day average appears on day 200, not before.",
@@ -267,11 +287,16 @@ en:{
 },
 pt:{
   fullname:"Taxa de Referência de Bitcoin da Stacks",
+  introH:"Um número para o custo do dinheiro na Stacks.",
+  introP:"Cada mercado de crédito cobra o seu preço. O SBOR faz a média entre eles, ponderada pelo tamanho, para mostrar a taxa de mercado em vez da taxa de uma plataforma só.",
+  introUse:"Use como régua. Tomar emprestado acima do SBOR significa pagar mais que o mercado. Depositar abaixo dele significa ganhar menos. A tabela mostra onde cada plataforma está hoje.",
   stamp:d=>`Taxa em <span class="num">${d}</span> · lida do estado dos contratos da Zest · atualizada diariamente`,
   borrowK:"APY de empréstimo", supplyK:"APY de depósito",
   deltaBorrow:"", deltaSupply:"",
   histH:"Histórico",
   histP:"Fechamentos diários desde o início do índice. A média móvel só aparece quando existe janela completa de dados.",
+  notEnough:"Ainda não há histórico suficiente para desenhar este período.",
+  backfillNote:(n,total)=>`Faixa sombreada: ${n} de ${total} dias reconstruídos a partir dos registros diários da DefiLlama. Dias reconstruídos têm apenas a taxa de depósito, já que não existe histórico de empréstimo para esses mercados. Os dias sem sombra são o registro ao vivo.`,
   legend:["APY de empréstimo","APY de depósito","Empréstimo, média de 30 dias"],
   ago:d=>d===30?"30 dias atrás":d===90?"90 dias atrás":"1 ano atrás", today:"hoje",
   consH:"Componentes",
@@ -288,6 +313,7 @@ pt:{
   ],
   methodB:[
     "<strong>Fixing diário.</strong> O fixing oficial é publicado uma vez por dia, às 14:00 UTC. As leituras são atualizadas a cada seis horas, mas somente o fixing diário entra no registro histórico.",
+    "<strong>Instrumentos, não ativos nativos.</strong> Cada taxa se refere ao ativo que é de fato emprestado na Stacks. O SBOR-BTC mede o sBTC, não o bitcoin nativo, e o SBOR-USD mede USDCx e USDh, não dólares bancários. Cada um carrega risco de emissão, paridade ou ponte que o ativo original não tem.",
     "<strong>Rendimento do protocolo fica de fora.</strong> Alguns ativos rendem por si mesmos, e não pelo empréstimo. O sBTC carrega rendimento do protocolo Bitcoin via dual stacking, e o stSTX carrega rendimento de staking PoX administrado pela StackingDAO. Esse rendimento pertence ao ativo, não ao empréstimo, então nunca entra no fixing.",
     "<strong>Entrada gradual.</strong> Um mercado recém-elegível entra com peso zero e sobe linearmente até o peso cheio ao longo de 30 dias, de modo que incluir uma plataforma nunca provoca um salto na taxa.",
     "<strong>Médias móveis.</strong> Uma média só é publicada quando existe a janela completa de dados. Uma média de 200 dias aparece no dia 200, não antes.",
@@ -307,10 +333,10 @@ const INDEX_COPY = {
              note:"Weights track lending depth in each dollar market. USDCx and USDh are treated as one currency." },
         pt:{ sub:"mercados em dólar", headline:"O custo do dinheiro em dólar na Stacks.",
              note:"Os pesos acompanham a profundidade de crédito de cada mercado em dólar. USDCx e USDh são tratados como uma só moeda." }},
-  BTC:{ en:{ sub:"bitcoin markets", headline:"The cost of borrowing bitcoin against Bitcoin-secured collateral.",
-             note:"sBTC is the only sBTC market with a borrow side. stSTXbtc is collateral only and is excluded." },
-        pt:{ sub:"mercados em bitcoin", headline:"O custo de tomar bitcoin emprestado contra garantia protegida pelo Bitcoin.",
-             note:"O sBTC é o único mercado em sBTC com lado tomador. O stSTXbtc serve apenas como garantia e fica de fora." }},
+  BTC:{ en:{ sub:"sBTC markets", headline:"What it costs to borrow sBTC, the bitcoin asset used on Stacks.",
+             note:"The instrument is sBTC, not native bitcoin. sBTC is redeemable for bitcoin and carries peg and bridge risk that native bitcoin does not. stSTXbtc is collateral only and is excluded." },
+        pt:{ sub:"mercados em sBTC", headline:"Quanto custa tomar sBTC emprestado, o ativo bitcoin usado na Stacks.",
+             note:"O instrumento é o sBTC, não o bitcoin nativo. O sBTC é resgatável em bitcoin e carrega risco de paridade e de ponte que o bitcoin nativo não tem. O stSTXbtc serve apenas como garantia e fica de fora." }},
   STX:{ en:{ sub:"STX markets", headline:"The cost of money in STX, the chain's own collateral asset.",
              note:"Weights track lending depth in STX and stSTX markets. Liquid staking yield is not a lending rate and is excluded." },
         pt:{ sub:"mercados em STX", headline:"O custo do dinheiro em STX, o ativo de garantia da própria rede.",
@@ -346,47 +372,71 @@ function computed(key){
     supply: ms.reduce((a,m)=>a+m.supply*m.weight,0) };
 }
 
-function series(days, base, amp, seed){
-  let v = base, out = [];
-  for (let i=0;i<days;i++){
-    seed = (seed*9301+49297)%233280;
-    v += ((seed/233280)-0.5)*amp;
-    v = Math.max(base-amp*3, Math.min(base+amp*3, v));
-    out.push(v);
-  }
-  out[out.length-1] = base;
-  return out;
+let HISTORY = [];   /* filled by boot() from api/v1/history.json */
+
+const movingAvg = (arr,w) => arr.map((_,i)=>{
+  const win = arr.slice(Math.max(0,i-w+1), i+1);
+  if (win.length < w || win.some(v => v == null)) return null;
+  return win.reduce((a,b)=>a+b,0)/win.length;
+});
+
+/* Rows for the selected index and range, oldest first. */
+function seriesFor(label, days){
+  const cutoff = new Date(Date.now() - days*864e5).toISOString().slice(0,10);
+  return HISTORY.filter(r => r.date >= cutoff && r[label])
+                .map(r => ({ date:r.date, backfilled:!!r.backfilled,
+                             borrow:r[label].borrow, supply:r[label].supply }));
 }
-const movingAvg = (arr,w) => arr.map((_,i)=> i<w-1 ? null : arr.slice(i-w+1,i+1).reduce((a,b)=>a+b,0)/w);
 
 const chart = document.getElementById("chart");
 function draw(){
-  const ix = computed(current), days = currentRange, t = T();
-  const b = series(days, ix.borrow, Math.max(ix.borrow,1)*0.05, 4711);
-  const s = series(days, ix.supply, Math.max(ix.supply,1)*0.06, 9137);
-  const ma = movingAvg(b, 30);
-  const all = b.concat(s);
-  const span = (Math.max(...all)-Math.min(...all)) || 1;
-  const lo = Math.min(...all)-span*0.25, hi = Math.max(...all)+span*0.25;
+  const t = T(), label = INDICES[current].label, days = currentRange;
+  const rows = seriesFor(label, days);
   const W=1120,H=280,PL=58,PR=14,PT=18,PB=26;
-  const x = i => PL + i*(W-PL-PR)/(days-1);
+
+  if (rows.length < 2){
+    chart.innerHTML =
+      `<text x="${W/2}" y="${H/2}" text-anchor="middle" font-family="IBM Plex Sans" `+
+      `font-size="14" fill="#5C646B">${t.notEnough}</text>`;
+    set("chartNote", "");
+    return;
+  }
+
+  const b = rows.map(r => r.borrow);
+  const sp = rows.map(r => r.supply);
+  const ma = movingAvg(b.map(v => v == null ? null : v), 30);
+  const vals = [...b, ...sp].filter(v => v != null);
+  const span = (Math.max(...vals)-Math.min(...vals)) || 1;
+  const lo = Math.min(...vals)-span*0.25, hi = Math.max(...vals)+span*0.25;
+  const x = i => PL + i*(W-PL-PR)/(rows.length-1);
   const y = v => PT + (hi-v)*(H-PT-PB)/(hi-lo);
   const path = arr => { let d="",pen=false;
     arr.forEach((v,i)=>{ if(v==null){pen=false;return;}
       d += (pen?"L":"M")+x(i).toFixed(1)+" "+y(v).toFixed(1)+" "; pen=true; });
     return d.trim(); };
-  let g="";
+
+  let g = "";
+  /* shade the backfilled span so it is never mistaken for live record */
+  const lastBf = rows.reduce((acc,r,i) => r.backfilled ? i : acc, -1);
+  if (lastBf >= 0){
+    g += `<rect x="${PL}" y="${PT}" width="${(x(lastBf)-PL).toFixed(1)}" `+
+         `height="${H-PT-PB}" fill="#E7E9E1"/>`;
+  }
   for (let k=0;k<=4;k++){
     const v = lo+(hi-lo)*k/4, yy = y(v);
     g += `<line x1="${PL}" y1="${yy}" x2="${W-PR}" y2="${yy}" stroke="#DEE1D8"/>`;
     g += `<text x="${PL-10}" y="${yy+4}" text-anchor="end" font-family="IBM Plex Mono" font-size="11" fill="#5C646B">${v.toFixed(1)}%</text>`;
   }
-  g += `<text x="${PL}" y="${H-8}" font-family="IBM Plex Sans" font-size="11" fill="#5C646B">${t.ago(days)}</text>`;
-  g += `<text x="${W-PR}" y="${H-8}" text-anchor="end" font-family="IBM Plex Sans" font-size="11" fill="#5C646B">${t.today}</text>`;
-  if (days > 30) g += `<path d="${path(ma)}" fill="none" stroke="#A2452F" stroke-width="1.5" stroke-dasharray="5 4"/>`;
-  g += `<path d="${path(s)}" fill="none" stroke="#5C646B" stroke-width="1.5"/>`;
+  g += `<text x="${PL}" y="${H-8}" font-family="IBM Plex Mono" font-size="11" fill="#5C646B">${rows[0].date}</text>`;
+  g += `<text x="${W-PR}" y="${H-8}" text-anchor="end" font-family="IBM Plex Mono" font-size="11" fill="#5C646B">${rows[rows.length-1].date}</text>`;
+  if (ma.some(v => v != null))
+    g += `<path d="${path(ma)}" fill="none" stroke="#A2452F" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+  g += `<path d="${path(sp)}" fill="none" stroke="#5C646B" stroke-width="1.5"/>`;
   g += `<path d="${path(b)}" fill="none" stroke="#1D4E6B" stroke-width="2"/>`;
   chart.innerHTML = g;
+
+  const bf = rows.filter(r => r.backfilled).length;
+  set("chartNote", bf ? t.backfillNote(bf, rows.length) : "");
 }
 
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -404,6 +454,7 @@ function renderChrome(){
   const t = T();
   document.documentElement.lang = lang === "pt" ? "pt-BR" : "en";
   set("t-fullname", t.fullname);
+  set("t-introH", t.introH); set("t-introP", t.introP); set("t-introUse", t.introUse);
   set("t-borrow-k", t.borrowK); set("t-supply-k", t.supplyK);
   set("t-hist-h", t.histH); set("t-hist-p", t.histP);
   set("t-cons-h", t.consH); set("t-cons-foot", t.consFoot);
@@ -490,6 +541,10 @@ async function boot(){
       }));
     }
     if (d.fixing) fixingDate = d.fixing.slice(0,10);
+  }catch(e){ console.warn("Live fixing unavailable, showing bundled snapshot.", e); }
+  try{
+    const h = await fetch("/api/v1/history.json", { cache:"no-store" });
+    if (h.ok) HISTORY = await h.json();
   }catch(e){ console.warn("Live fixing unavailable, showing bundled snapshot.", e); }
   renderChrome(); render();
 }
