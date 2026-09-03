@@ -7,7 +7,7 @@
     "sbor.btc",
     "sbor.stx"
   ],
-  "fixing": "2026-09-03T15:34:28Z",
+  "fixing": "2026-09-03T15:38:34Z",
   "methodologyVersion": "1.0.0",
   "isDailyFixing": true,
   "basis": "APY, annually compounded",
@@ -115,16 +115,15 @@
     "label": "SBOR-POX",
     "headline": "The native Bitcoin yield paid to STX stakers.",
     "kind": "staking yield",
-    "apy": 5.4,
+    "apy": 5.36,
     "cycle": 141,
-    "cycleYieldPct": 0.2102,
+    "cycleYieldPct": 0.209,
     "btcPaid": 2.928688,
     "stxLocked": 421543815,
-    "prices": {
-      "btcUsd": 80767,
-      "stxUsd": 0.266891
-    },
-    "note": "Paid in bitcoin from miner commitments. Denominated in dollars here so it can be compared with the lending indices. It is a staking yield, not a lending rate, and is never blended into them."
+    "stxPerBtc": 300772.04,
+    "rateSource": "Bitflow",
+    "rateQuoteImpactBps": 14,
+    "note": "Paid in bitcoin against a position locked in STX, so the figure depends on the BTC/STX exchange rate rather than on either dollar price. It is a staking yield, not a lending rate, and is never blended into the lending indices."
   },
   "notes": [
     "The fixing is published once daily at 14:00 UTC.",
