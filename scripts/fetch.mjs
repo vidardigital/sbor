@@ -212,10 +212,14 @@ const main = async () => {
     const total = ms.reduce((a,m) => a + m.depthUsd * m.phaseIn, 0);
     ms.forEach(m => { m.weight = round(m.depthUsd * m.phaseIn / total, 4); });
     const venues = [...new Set(ms.map(m => m.venue))];
+    const allIn = ms.reduce((a,m) => a + (m.supply + (m.protocolYield || 0)) * m.weight, 0);
+    const supplyOnly = ms.reduce((a,m) => a + m.supply * m.weight, 0);
     indices[META[cur].label] = {
       ...META[cur],
       borrow: round(ms.reduce((a,m) => a + m.borrow * m.weight, 0)),
-      supply: round(ms.reduce((a,m) => a + m.supply * m.weight, 0)),
+      supply: round(supplyOnly),
+      allInSupply: round(allIn),
+      allInSupplyDiffers: round(allIn - supplyOnly) > 0,
       venues,
       largestConstituentWeight: round(Math.max(...ms.map(m => m.weight)), 4),
       markets: ms.map(({ currency, ...rest }) => rest)
@@ -251,7 +255,8 @@ const main = async () => {
       "Currencies are never blended into a single figure.",
       "stSTXbtc is collateral only and is excluded from all fixings.",
       "Rates are quoted on the instrument actually lent. SBOR-BTC measures sBTC, not native bitcoin. SBOR-USD measures USDCx and USDh, not bank dollars.",
-      "poxReference is a staking yield, not a lending rate. It is published beside the indices and never blended into them."
+      "poxReference is a staking yield, not a lending rate. It is published beside the indices and never blended into them.",
+      "allInSupply adds protocol yield to the lending rate, which is what a supplier actually receives today. The fixing itself is the lending rate alone, because protocol yield comes from the asset and can change or end independently of the lending market."
     ]
   };
 
