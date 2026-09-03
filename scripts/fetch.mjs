@@ -53,11 +53,11 @@ const DEPTH_ALIAS = { SBTC:"sBTC", USDC:"USDCx", USDH:"USDh", STX:"STX", STSTX:"
 
 const META = {
   USD: { label:"SBOR-USD", currency:"USD",
-         headline:"The dollar cost of money on Stacks." },
+         headline:"What money costs in dollars on Stacks." },
   BTC: { label:"SBOR-BTC", currency:"BTC",
-         headline:"What it costs to borrow sBTC, the bitcoin asset used on Stacks." },
+         headline:"What it costs to borrow sBTC on Stacks." },
   STX: { label:"SBOR-STX", currency:"STX",
-         headline:"The cost of money in STX, the chain's own collateral asset." }
+         headline:"What money costs in STX on Stacks." }
 };
 
 const YIELD_SOURCE = {
