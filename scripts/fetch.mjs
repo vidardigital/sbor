@@ -94,6 +94,7 @@ async function apysFor(asset){
   });
   const v = cvToValue(res, true);
   const t = v?.value ?? v;                       // unwrap (ok ...) if present
+  log(`    raw ${asset.symbol}: ${JSON.stringify(v).slice(0,300)}`);
   const supply = Number(t["supply-apy"]?.value ?? t["supply-apy"]) / 100;
   const borrow = Number(t["borrow-apy"]?.value ?? t["borrow-apy"]) / 100;
   if (!Number.isFinite(supply) || !Number.isFinite(borrow))
@@ -174,6 +175,10 @@ const main = async () => {
       log(`  ${a.symbol}: supply=${round(supply)}% borrow=${round(borrow)}% depth=${d}`);
       if (!a.currency){ log(`    (collateral only, excluded from fixings)`); continue; }
       if (d <= 0){ log(`    (no depth, skipped)`); continue; }
+      if (borrow === 0 && supply === 0){
+        log(`    (both rates read zero, treated as unreadable and excluded)`);
+        continue;
+      }
       markets.push({
         venue: ZEST.venue, asset: a.symbol, currency: a.currency,
         borrow: round(borrow), supply: round(supply),
@@ -208,7 +213,7 @@ const main = async () => {
   for (const cur of Object.keys(META)){
     const ms = markets.filter(m => m.currency === cur)
                       .sort((a,b) => b.depthUsd - a.depthUsd);
-    if (!ms.length) continue;
+    if (!ms.length){ log(`  ${META[cur].label}: no readable market, index omitted from this fixing`); continue; }
     const total = ms.reduce((a,m) => a + m.depthUsd * m.phaseIn, 0);
     ms.forEach(m => { m.weight = round(m.depthUsd * m.phaseIn / total, 4); });
     const venues = [...new Set(ms.map(m => m.venue))];
