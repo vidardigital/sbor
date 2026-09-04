@@ -131,7 +131,10 @@ L.push(`--------------------------------------------------------------`);
 L.push(`Rates are read from lending contract state on Stacks mainnet and`);
 L.push(`published once daily at 11:00 UTC. SBOR is a statistic, not`);
 L.push(`investment advice, and is provided as is without warranty.`);
-L.push(`Unsubscribe by replying to this email.`);
+L.push(``);
+L.push(`You are receiving this because you asked for it at sbor.xyz.`);
+L.push(`To unsubscribe, reply with the word unsubscribe, or write to`);
+L.push(`contact@sbor.xyz. You will be removed before the next report.`);
 
 const out = L.join("\n") + "\n";
 writeFileSync("weekly.txt", out);
@@ -231,7 +234,12 @@ const html = `<div style="background:${P};color:${INK};font-family:'IBM Plex San
   <p style="color:${SOFT};font-size:12.5px;margin:0">
     Rates are read from lending contract state on Stacks mainnet and published once daily
     at 11:00 UTC. SBOR is a statistic, not investment advice, and is provided as is without
-    warranty. Unsubscribe by replying to this email.
+    warranty.
+  </p>
+  <p style="color:${SOFT};font-size:12.5px;margin:10px 0 0">
+    You are receiving this because you asked for it at sbor.xyz.
+    <a href="mailto:contact@sbor.xyz?subject=Unsubscribe&amp;body=Please%20remove%20me%20from%20the%20SBOR%20weekly%20report."
+       style="color:${AC}">Unsubscribe</a>, and you will be removed before the next report.
   </p>
 </div>`;
 
