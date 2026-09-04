@@ -164,8 +164,7 @@ const cover = Object.entries(latest.indices).map(([label, ix]) => {
 }).join("");
 
 const poxLine = latest.poxReference
-  ? `<p style="margin:0 0 18px"><strong>Bitcoin staking yield</strong> <span style="${mono};color:${AC}">${latest.poxReference.apy.toFixed(2)}%</span>
-     <span style="color:${SOFT}">, paid in bitcoin to STX stackers, cycle ${latest.poxReference.cycle}. A staking yield, not a lending rate.</span></p>`
+  ? `<p style="margin:0 0 18px"><strong>Bitcoin staking yield</strong> <span style="${mono};color:${AC}">${latest.poxReference.apy.toFixed(2)}%</span><span style="color:${SOFT}">, paid in bitcoin to STX stackers, cycle ${latest.poxReference.cycle}. A staking yield, not a lending rate.</span></p>`
   : "";
 
 const html = `<div style="background:${P};color:${INK};font-family:'IBM Plex Sans',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.55;padding:28px;max-width:660px">
