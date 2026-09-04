@@ -292,9 +292,10 @@ a{color:var(--accent)}
           <p id="t-signup-p"></p>
         </div>
       </div>
-      <form class="signup" name="weekly" method="POST" action="/success.html" data-netlify="true" netlify-honeypot="company">
-        <input type="hidden" name="form-name" value="weekly">
-        <p class="hp"><label>Leave blank <input name="company" tabindex="-1"></label></p>
+      <form class="signup" method="POST" action="https://formspree.io/f/FORMSPREE_ID">
+        <input type="hidden" name="_subject" value="SBOR weekly report signup">
+        <input type="hidden" name="_next" value="https://sbor.xyz/success.html">
+        <p class="hp"><label>Leave blank <input name="_gotcha" tabindex="-1"></label></p>
         <label class="sr" for="email">Email</label>
         <input id="email" type="email" name="email" required autocomplete="email">
         <button type="submit" id="t-signup-btn"></button>
