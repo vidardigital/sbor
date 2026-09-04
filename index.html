@@ -692,6 +692,10 @@ async function boot(){
     if(!r.ok) throw new Error(r.status);
     const d = await r.json();
     const map = { "SBOR-USD":"USD", "SBOR-BTC":"BTC", "SBOR-STX":"STX" };
+    const present = new Set(Object.keys(d.indices || {}));
+    for (const [label,k] of Object.entries(map))
+      if (!present.has(label)) delete INDICES[k];
+    if (!INDICES[current]) current = Object.keys(INDICES)[0];
     for (const [label, ix] of Object.entries(d.indices || {})){
       const k = map[label]; if(!k || !INDICES[k]) continue;
       INDICES[k].markets = ix.markets.map(m => ({
