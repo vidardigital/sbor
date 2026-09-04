@@ -249,7 +249,7 @@ const main = async () => {
     indices,
     ...(pox && { poxReference: pox }),
     notes:[
-      "The fixing is published once daily at 14:00 UTC.",
+      "The fixing is published once daily at 11:00 UTC.",
       "Rates are read from contract state, not from any venue's published figure.",
       "Protocol yield belongs to the asset, not the loan, and is excluded from every fixing.",
       "Currencies are never blended into a single figure.",
