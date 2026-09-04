@@ -7,7 +7,7 @@
     "sbor.btc",
     "sbor.stx"
   ],
-  "fixing": "2026-09-04T13:43:53Z",
+  "fixing": "2026-09-04T13:52:45Z",
   "methodologyVersion": "1.0.0",
   "isDailyFixing": true,
   "basis": "APY, annually compounded",
@@ -54,31 +54,6 @@
           "depthUsd": 439335,
           "phaseIn": 1,
           "weight": 0.0282
-        }
-      ]
-    },
-    "SBOR-BTC": {
-      "label": "SBOR-BTC",
-      "currency": "BTC",
-      "headline": "What it costs to borrow sBTC on Stacks.",
-      "borrow": 0,
-      "supply": 0,
-      "allInSupply": 0,
-      "allInSupplyDiffers": false,
-      "venues": [
-        "Zest V2"
-      ],
-      "largestConstituentWeight": 1,
-      "markets": [
-        {
-          "venue": "Zest V2",
-          "asset": "sBTC",
-          "borrow": 0,
-          "supply": 0,
-          "protocolYieldSource": "Bitcoin protocol yield via dual stacking, paid on enrolment",
-          "depthUsd": 52905153,
-          "phaseIn": 1,
-          "weight": 1
         }
       ]
     },
