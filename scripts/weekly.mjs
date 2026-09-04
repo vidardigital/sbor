@@ -25,6 +25,9 @@ const cutoff = new Date(Date.parse(today) - 7*864e5).toISOString().slice(0,10);
 /* nearest recorded fixing on or before one week ago */
 const prior = [...history].reverse().find(r => r.date <= cutoff) || null;
 
+const EXPECTED = ["SBOR-USD","SBOR-BTC","SBOR-STX"];
+const missing = EXPECTED.filter(l => !latest.indices[l]);
+
 const L = [];
 L.push(`SBOR WEEKLY RATE REPORT`);
 L.push(`Week ending ${longDate(today)}`);
@@ -90,10 +93,44 @@ if (withProtocolYield.length){
   L.push(``);
 }
 
+if (missing.length){
+  L.push(`NOT PUBLISHED THIS WEEK`);
+  for (const m of missing){
+    L.push(`  ${m}: no readable lending market. When a venue's contract state`);
+    L.push(`  cannot be read, the index is omitted rather than published with a`);
+    L.push(`  figure that is not real.`);
+  }
+  L.push(``);
+}
+
 L.push(`--------------------------------------------------------------`);
-L.push(`SBOR is published as a public good. It is a statistic, not an`);
-L.push(`investment. Rates are read from lending contract state on Stacks`);
-L.push(`mainnet and published once daily at 11:00 UTC.`);
+L.push(`ABOUT SBOR`);
+L.push(``);
+L.push(`SBOR is the benchmark lending rate for Stacks. Every lending market`);
+L.push(`prices money differently, so there was no way to say what capital`);
+L.push(`actually costs on the chain without checking each venue by hand.`);
+L.push(`SBOR publishes one borrow rate and one supply rate per currency,`);
+L.push(`weighted by market depth and read directly from contract state`);
+L.push(`rather than from any venue's published figure.`);
+L.push(``);
+L.push(`Use it as a yardstick. Borrowing above SBOR means paying more than`);
+L.push(`the market. Supplying below it means earning less.`);
+L.push(``);
+L.push(`It is published as a public good. Free to reference, no key, no`);
+L.push(`registration, no fee. It is an independent benchmark and is not`);
+L.push(`affiliated with Stacks, the Stacks Foundation, or any venue it`);
+L.push(`measures.`);
+L.push(``);
+L.push(`  Data and methodology   https://sbor.xyz`);
+L.push(`  API                    https://sbor.xyz/api/v1/latest.json`);
+L.push(`  Source                 https://github.com/vidardigital/sbor`);
+L.push(`  X                      https://x.com/SBORindex`);
+L.push(`  Contact                contact@sbor.xyz`);
+L.push(``);
+L.push(`--------------------------------------------------------------`);
+L.push(`Rates are read from lending contract state on Stacks mainnet and`);
+L.push(`published once daily at 11:00 UTC. SBOR is a statistic, not`);
+L.push(`investment advice, and is provided as is without warranty.`);
 L.push(`Unsubscribe by replying to this email.`);
 
 const out = L.join("\n") + "\n";
@@ -153,11 +190,49 @@ const html = `<div style="background:${P};color:${INK};font-family:'IBM Plex San
             : "Week over week comparison begins once the series is long enough to support it."}
   </p>
 
+  ${missing.length ? `<p style="margin:0 0 6px"><strong>Not published this week</strong></p>
+  <ul style="margin:0 0 18px;padding-left:20px;color:${SOFT};font-size:14px">
+    ${missing.map(m => `<li><strong>${m}</strong> no readable lending market. When contract state cannot be read, the index is omitted rather than published with a figure that is not real.</li>`).join("")}
+  </ul>` : ""}
+
   <hr style="border:none;border-top:1px solid ${RL};margin:18px 0">
-  <p style="color:${SOFT};font-size:13px;margin:0">
-    Full data, methodology and history at <a href="https://sbor.xyz" style="color:${AC}">sbor.xyz</a>.
-    Rates are read from lending contract state on Stacks mainnet and published once daily at 11:00 UTC.
-    SBOR is a statistic, not investment advice.
+
+  <p style="margin:0 0 8px"><strong>About SBOR</strong></p>
+  <p style="color:${SOFT};font-size:14px;margin:0 0 12px">
+    SBOR is the benchmark lending rate for Stacks. Every lending market prices money
+    differently, so there was no way to say what capital actually costs on the chain
+    without checking each venue by hand. SBOR publishes one borrow rate and one supply
+    rate per currency, weighted by market depth and read directly from contract state
+    rather than from any venue's published figure.
+  </p>
+  <p style="color:${SOFT};font-size:14px;margin:0 0 12px">
+    Use it as a yardstick. Borrowing above SBOR means paying more than the market.
+    Supplying below it means earning less.
+  </p>
+  <p style="color:${SOFT};font-size:14px;margin:0 0 14px">
+    It is published as a public good. Free to reference, no key, no registration, no fee.
+    SBOR is an independent benchmark and is not affiliated with Stacks, the Stacks
+    Foundation, or any venue it measures.
+  </p>
+
+  <table style="border-collapse:collapse;font-size:13px;margin-bottom:18px">
+    <tr><td style="padding:2px 18px 2px 0;color:${SOFT}">Data and methodology</td>
+        <td style="padding:2px 0"><a href="https://sbor.xyz" style="color:${AC}">sbor.xyz</a></td></tr>
+    <tr><td style="padding:2px 18px 2px 0;color:${SOFT}">API</td>
+        <td style="padding:2px 0"><a href="https://sbor.xyz/api/v1/latest.json" style="color:${AC}">sbor.xyz/api/v1/latest.json</a></td></tr>
+    <tr><td style="padding:2px 18px 2px 0;color:${SOFT}">Source</td>
+        <td style="padding:2px 0"><a href="https://github.com/vidardigital/sbor" style="color:${AC}">github.com/vidardigital/sbor</a></td></tr>
+    <tr><td style="padding:2px 18px 2px 0;color:${SOFT}">X</td>
+        <td style="padding:2px 0"><a href="https://x.com/SBORindex" style="color:${AC}">@SBORindex</a></td></tr>
+    <tr><td style="padding:2px 18px 2px 0;color:${SOFT}">Contact</td>
+        <td style="padding:2px 0"><a href="mailto:contact@sbor.xyz" style="color:${AC}">contact@sbor.xyz</a></td></tr>
+  </table>
+
+  <hr style="border:none;border-top:1px solid ${RL};margin:18px 0">
+  <p style="color:${SOFT};font-size:12.5px;margin:0">
+    Rates are read from lending contract state on Stacks mainnet and published once daily
+    at 11:00 UTC. SBOR is a statistic, not investment advice, and is provided as is without
+    warranty. Unsubscribe by replying to this email.
   </p>
 </div>`;
 
