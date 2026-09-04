@@ -5,10 +5,15 @@ Benchmark lending rates for Stacks, read from contract state.
 Full data and methodology: https://sbor.xyz
 
 --------------------------------------------------------------
-INDEX        BORROW   SUPPLY   SPREAD  
+INDEX        BORROW   SUPPLY   SPREAD
 --------------------------------------------------------------
-SBOR-USD      2.29%    0.57% 1.72 pts  
-SBOR-STX      1.77%    0.67% 1.10 pts  
+SBOR-USD      2.29%    0.57% 1.72 pts
+SBOR-STX      1.77%    0.67% 1.10 pts
+NOT PUBLISHED THIS WEEK
+  SBOR-BTC: no readable lending market. When a venue's contract state
+  cannot be read, the index is omitted rather than published with a
+  figure that is not real.
+
 --------------------------------------------------------------
 
 No fixing from a week ago is on record yet, so week over week
@@ -30,11 +35,6 @@ CONSTITUENTS
 EXCLUDED FROM THE FIXING
   stSTX: PoX staking yield on the underlying, managed by StackingDAO.
   Protocol yield belongs to the asset, not the loan.
-
-NOT PUBLISHED THIS WEEK
-  SBOR-BTC: no readable lending market. When a venue's contract state
-  cannot be read, the index is omitted rather than published with a
-  figure that is not real.
 
 --------------------------------------------------------------
 ABOUT SBOR
