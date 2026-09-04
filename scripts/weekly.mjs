@@ -93,7 +93,7 @@ if (withProtocolYield.length){
 L.push(`--------------------------------------------------------------`);
 L.push(`SBOR is published as a public good. It is a statistic, not an`);
 L.push(`investment. Rates are read from lending contract state on Stacks`);
-L.push(`mainnet and published once daily at 14:00 UTC.`);
+L.push(`mainnet and published once daily at 11:00 UTC.`);
 L.push(`Unsubscribe by replying to this email.`);
 
 const out = L.join("\n") + "\n";
