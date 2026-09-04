@@ -31,8 +31,37 @@ EXCLUDED FROM THE FIXING
   stSTX: PoX staking yield on the underlying, managed by StackingDAO.
   Protocol yield belongs to the asset, not the loan.
 
+NOT PUBLISHED THIS WEEK
+  SBOR-BTC: no readable lending market. When a venue's contract state
+  cannot be read, the index is omitted rather than published with a
+  figure that is not real.
+
 --------------------------------------------------------------
-SBOR is published as a public good. It is a statistic, not an
-investment. Rates are read from lending contract state on Stacks
-mainnet and published once daily at 11:00 UTC.
+ABOUT SBOR
+
+SBOR is the benchmark lending rate for Stacks. Every lending market
+prices money differently, so there was no way to say what capital
+actually costs on the chain without checking each venue by hand.
+SBOR publishes one borrow rate and one supply rate per currency,
+weighted by market depth and read directly from contract state
+rather than from any venue's published figure.
+
+Use it as a yardstick. Borrowing above SBOR means paying more than
+the market. Supplying below it means earning less.
+
+It is published as a public good. Free to reference, no key, no
+registration, no fee. It is an independent benchmark and is not
+affiliated with Stacks, the Stacks Foundation, or any venue it
+measures.
+
+  Data and methodology   https://sbor.xyz
+  API                    https://sbor.xyz/api/v1/latest.json
+  Source                 https://github.com/vidardigital/sbor
+  X                      https://x.com/SBORindex
+  Contact                contact@sbor.xyz
+
+--------------------------------------------------------------
+Rates are read from lending contract state on Stacks mainnet and
+published once daily at 11:00 UTC. SBOR is a statistic, not
+investment advice, and is provided as is without warranty.
 Unsubscribe by replying to this email.
