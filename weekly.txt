@@ -1,0 +1,38 @@
+SBOR WEEKLY RATE REPORT
+Week ending 4 September 2026
+
+Benchmark lending rates for Stacks, read from contract state.
+Full data and methodology: https://sbor.xyz
+
+--------------------------------------------------------------
+INDEX        BORROW   SUPPLY   SPREAD  
+--------------------------------------------------------------
+SBOR-USD      2.29%    0.57% 1.72 pts  
+SBOR-STX      1.77%    0.67% 1.10 pts  
+--------------------------------------------------------------
+
+No fixing from a week ago is on record yet, so week over week
+comparisons begin once the series is long enough to support them.
+
+COVERAGE
+  SBOR-USD   2 venues  largest  65% of depth  total $15.6M
+  SBOR-STX   1 venue   largest  52% of depth  total $5.4M
+
+CONSTITUENTS
+  SBOR-USD
+    Zest V2 USDCx          borrow   2.68%  supply   0.76%  weight  65.0%
+    Granite USDCx          borrow   1.45%  supply   0.25%  weight  32.1%
+    Zest V2 USDh           borrow   2.74%  supply   0.00%  weight   2.8%
+  SBOR-STX
+    Zest V2 stSTX          borrow   1.13%  supply   0.06%  weight  52.2%
+    Zest V2 STX            borrow   2.47%  supply   1.33%  weight  47.8%
+
+EXCLUDED FROM THE FIXING
+  stSTX: PoX staking yield on the underlying, managed by StackingDAO.
+  Protocol yield belongs to the asset, not the loan.
+
+--------------------------------------------------------------
+SBOR is published as a public good. It is a statistic, not an
+investment. Rates are read from lending contract state on Stacks
+mainnet and published once daily at 11:00 UTC.
+Unsubscribe by replying to this email.
