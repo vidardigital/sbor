@@ -36,7 +36,7 @@ L.push(`Benchmark lending rates for Stacks, read from contract state.`);
 L.push(`Full data and methodology: https://sbor.xyz`);
 L.push(``);
 L.push(`--------------------------------------------------------------`);
-L.push(`${pad("INDEX",10)} ${rpad("BORROW",8)} ${rpad("SUPPLY",8)} ${rpad("SPREAD",8)}  ${prior ? "WoW BORROW" : ""}`);
+L.push(`${pad("INDEX",10)} ${rpad("BORROW",8)} ${rpad("SUPPLY",8)} ${rpad("SPREAD",8)}${prior ? "  WoW BORROW" : ""}`);
 L.push(`--------------------------------------------------------------`);
 
 for (const [label, ix] of Object.entries(latest.indices)){
@@ -46,8 +46,18 @@ for (const [label, ix] of Object.entries(latest.indices)){
     const d = ix.borrow - prior[label].borrow;
     wow = `${sign(d)} pts`;
   }
-  L.push(`${pad(label,10)} ${rpad(ix.borrow.toFixed(2)+"%",8)} ${rpad(ix.supply.toFixed(2)+"%",8)} ${rpad(spread.toFixed(2)+" pts",8)}  ${wow}`);
+  L.push(`${pad(label,10)} ${rpad(ix.borrow.toFixed(2)+"%",8)} ${rpad(ix.supply.toFixed(2)+"%",8)} ${rpad(spread.toFixed(2)+" pts",8)}${wow ? "  "+wow : ""}`);
 }
+if (missing.length){
+  L.push(`NOT PUBLISHED THIS WEEK`);
+  for (const m of missing){
+    L.push(`  ${m}: no readable lending market. When a venue's contract state`);
+    L.push(`  cannot be read, the index is omitted rather than published with a`);
+    L.push(`  figure that is not real.`);
+  }
+  L.push(``);
+}
+
 L.push(`--------------------------------------------------------------`);
 L.push(``);
 
@@ -90,16 +100,6 @@ if (withProtocolYield.length){
     L.push(`  ${m.asset}: ${m.protocolYieldSource}.`);
   }
   L.push(`  Protocol yield belongs to the asset, not the loan.`);
-  L.push(``);
-}
-
-if (missing.length){
-  L.push(`NOT PUBLISHED THIS WEEK`);
-  for (const m of missing){
-    L.push(`  ${m}: no readable lending market. When a venue's contract state`);
-    L.push(`  cannot be read, the index is omitted rather than published with a`);
-    L.push(`  figure that is not real.`);
-  }
   L.push(``);
 }
 
@@ -152,7 +152,7 @@ const rows = Object.entries(latest.indices).map(([label, ix]) => {
     ${td(`<span style="${mono};color:${AC}">${ix.borrow.toFixed(2)}%</span>`, "text-align:right")}
     ${td(`<span style="${mono}">${ix.supply.toFixed(2)}%</span>`, "text-align:right")}
     ${td(`<span style="${mono};color:${SOFT}">${spread} pts</span>`, "text-align:right")}
-    ${td(`<span style="${mono};color:${SOFT}">${wow}</span>`, "text-align:right")}
+    ${prior ? td(`<span style="${mono};color:${SOFT}">${wow}</span>`, "text-align:right") : ""}
   </tr>`;
 }).join("");
 
@@ -175,10 +175,15 @@ const html = `<div style="background:${P};color:${INK};font-family:'IBM Plex San
 
   <table style="border-collapse:collapse;width:100%;margin-bottom:18px">
     <tr style="color:${SOFT};font-size:13px">
-      ${td("Index")}${td("Borrow","text-align:right")}${td("Supply","text-align:right")}${td("Spread","text-align:right")}${td(prior?"WoW borrow":"","text-align:right")}
+      ${td("Index")}${td("Borrow","text-align:right")}${td("Supply","text-align:right")}${td("Spread","text-align:right")}${prior ? td("WoW borrow","text-align:right") : ""}
     </tr>
     ${rows}
   </table>
+
+  ${missing.length ? `<p style="margin:0 0 6px"><strong>Not published this week</strong></p>
+  <ul style="margin:0 0 18px;padding-left:20px;color:${SOFT};font-size:14px">
+    ${missing.map(m => `<li><strong>${m}</strong> no readable lending market. When contract state cannot be read, the index is omitted rather than published with a figure that is not real.</li>`).join("")}
+  </ul>` : ""}
 
   ${poxLine}
 
@@ -189,11 +194,6 @@ const html = `<div style="background:${P};color:${INK};font-family:'IBM Plex San
     ${prior ? `Compared with the fixing of ${longDate(prior.date)}.`
             : "Week over week comparison begins once the series is long enough to support it."}
   </p>
-
-  ${missing.length ? `<p style="margin:0 0 6px"><strong>Not published this week</strong></p>
-  <ul style="margin:0 0 18px;padding-left:20px;color:${SOFT};font-size:14px">
-    ${missing.map(m => `<li><strong>${m}</strong> no readable lending market. When contract state cannot be read, the index is omitted rather than published with a figure that is not real.</li>`).join("")}
-  </ul>` : ""}
 
   <hr style="border:none;border-top:1px solid ${RL};margin:18px 0">
 
