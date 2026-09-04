@@ -43,10 +43,10 @@ header{border-bottom:1px solid var(--rule)}
 .intro p{font-size:14.5px;color:var(--ink-soft);max-width:52ch;line-height:1.5}
 @media (max-width:720px){.intro-in{grid-template-columns:1fr;padding:20px 20px 22px;gap:8px}}
 .switch{display:flex;border-bottom:1px solid var(--rule);flex-wrap:wrap}
-.switch button{font:inherit;font-size:15px;background:none;border:none;border-bottom:2px solid transparent;color:var(--ink-soft);padding:14px 0;margin-right:32px;cursor:pointer;text-align:left}
+.switch button{font:inherit;font-size:15px;background:none;border:none;border-bottom:2px solid transparent;color:var(--ink-soft);padding:16px 0 14px;margin-right:52px;cursor:pointer;text-align:left;line-height:1.35}
 .switch button b{font-weight:500;color:inherit}
-.switch button small{display:block;font-size:12.5px;font-weight:400;opacity:.85}
-.switch button .tabnum{display:block;margin-top:6px;font-size:13px;color:var(--accent)}
+.switch button small{display:block;font-size:12.5px;font-weight:400;opacity:.85;margin-top:3px}
+.switch button .tabnum{display:block;margin-top:11px;font-size:13.5px;color:var(--accent);letter-spacing:.01em}
 .switch button .tabnum i{font-style:normal;color:var(--ink-soft);margin:0 2px}
 .switch button[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--accent)}
 .switch button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -124,7 +124,10 @@ a.venue:hover{color:var(--accent);border-bottom-color:var(--accent)}
 footer{padding:36px 0 64px;color:var(--ink-soft);font-size:13.5px}
 .oracle{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;border:1px solid var(--rule);padding:16px 18px;margin-bottom:22px}
 .oracle{flex-direction:column;align-items:flex-start;gap:12px}
-.footlinks{display:flex;gap:18px;flex-wrap:wrap;font-size:13px}
+.footlinks{display:flex;gap:22px;flex-wrap:wrap;font-size:13px;margin-top:2px}
+#t-indep{max-width:74ch;line-height:1.55}
+#t-indep a{color:var(--accent);text-decoration:none}
+#t-indep a:hover{text-decoration:underline}
 .footlinks a{color:var(--accent);text-decoration:none}
 .footlinks a:hover{text-decoration:underline}
 .oracle code a{color:var(--accent);text-decoration:none}
@@ -136,7 +139,7 @@ a{color:var(--accent)}
   .rate + .rate{border-left:none;border-top:1px solid var(--rule)}
   .method{grid-template-columns:1fr;gap:8px}
   .wrap{padding:0 20px}
-  .switch button{margin-right:22px;font-size:14px}
+  .switch button{margin-right:26px;font-size:14px}
   th.hide-sm,td.hide-sm{display:none}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -304,7 +307,7 @@ a{color:var(--accent)}
 <footer>
   <div class="wrap">
     <div class="oracle">
-      <div><span id="t-footIndep"></span> <a href="https://www.stacks.co" target="_blank" rel="noopener">Stacks</a><span id="t-footIndep2"></span></div>
+      <div id="t-indep"></div>
       <div class="footlinks">
         <span id="t-footMethod"></span>
         <a href="https://github.com/vidardigital/sbor" id="ghLink" target="_blank" rel="noopener"></a>
@@ -321,7 +324,7 @@ a{color:var(--accent)}
 /* ---------------- links ---------------- */
 const VENUE_URL = {
   "Zest V2": "https://app.zestprotocol.com",
-  "Granite": "https://granite.world"
+  "Granite": "https://app.granite.world"
 };
 const EXPLORER = id => `https://explorer.hiro.so/txid/${id}?chain=mainnet`;
 const CONTRACTS = [
@@ -352,8 +355,7 @@ en:{
   devEndpoints:"Endpoints",
   devExample:"Example",
   contractsH:"Contracts read",
-  footIndep:"SBOR is an independent benchmark for the",
-  footIndep2:"ecosystem. It is not affiliated with Stacks, the Stacks Foundation, or any venue it measures.",
+  indep:'SBOR is an independent benchmark for the <a href="https://www.stacks.co" target="_blank" rel="noopener">Stacks</a> ecosystem. It is not affiliated with Stacks, the Stacks Foundation, or any venue it measures.',
   footMethod:v=>`Methodology ${v}`,
   footSource:"Source on GitHub",
   footContact:"contact@sbor.xyz",
@@ -376,7 +378,7 @@ en:{
     "Weight <strong>wᵢ</strong> is the lending depth of market <strong>i</strong> in that currency. Rates are read from contract state, not from any venue's published figure."
   ],
   methodB:[
-    "<strong>Daily fixing.</strong> The official fixing is published once daily at 14:00 UTC. Readings are refreshed every six hours, but only the daily fixing enters the historical record.",
+    "<strong>Daily fixing.</strong> The official fixing is published once daily at 11:00 UTC. Readings are refreshed every six hours, but only the daily fixing enters the historical record.",
     "<strong>PoX needs an exchange rate, not a price.</strong> The staking yield is paid in bitcoin against a position locked in STX, so the figure depends on the BTC to STX rate rather than on either dollar price, which cancels. That rate is quoted from Bitflow, the deepest venue for the pair on Stacks, so the input stays native to the market being measured.",
     "<strong>Instruments, not native assets.</strong> Every rate is quoted on the asset actually lent on Stacks. SBOR-BTC measures sBTC, not native bitcoin, and SBOR-USD measures USDCx and USDh, not bank dollars. Each carries issuance, peg or bridge risk that the underlying asset does not.",
     "<strong>Protocol yield excluded.</strong> Some assets carry yield from the asset itself rather than from lending. sBTC carries Bitcoin protocol yield through dual stacking, and stSTX carries PoX staking yield managed by StackingDAO. That yield belongs to the asset, not the loan, so it never enters the fixing.",
@@ -408,8 +410,7 @@ pt:{
   devEndpoints:"Endpoints",
   devExample:"Exemplo",
   contractsH:"Contratos lidos",
-  footIndep:"O SBOR é uma referência independente para o ecossistema",
-  footIndep2:". Não tem vínculo com a Stacks, com a Stacks Foundation nem com qualquer plataforma que mede.",
+  indep:'O SBOR é uma referência independente para o ecossistema <a href="https://www.stacks.co" target="_blank" rel="noopener">Stacks</a>. Não tem vínculo com a Stacks, com a Stacks Foundation nem com qualquer plataforma que mede.',
   footMethod:v=>`Metodologia ${v}`,
   footSource:"Código no GitHub",
   footContact:"contact@sbor.xyz",
@@ -432,7 +433,7 @@ pt:{
     "O peso <strong>wᵢ</strong> é a profundidade de crédito do mercado <strong>i</strong> naquela moeda. As taxas são lidas do estado dos contratos, e não do número divulgado por qualquer plataforma."
   ],
   methodB:[
-    "<strong>Fixing diário.</strong> O fixing oficial é publicado uma vez por dia, às 14:00 UTC. As leituras são atualizadas a cada seis horas, mas somente o fixing diário entra no registro histórico.",
+    "<strong>Fixing diário.</strong> O fixing oficial é publicado uma vez por dia, às 11:00 UTC. As leituras são atualizadas a cada seis horas, mas somente o fixing diário entra no registro histórico.",
     "<strong>O PoX depende de uma taxa de câmbio, não de um preço.</strong> O rendimento do staking é pago em bitcoin sobre uma posição travada em STX, então o número depende da relação BTC para STX, e não de qualquer preço em dólar, que se cancela. Essa relação é cotada na Bitflow, a maior liquidez do par na Stacks, o que mantém a entrada nativa ao mercado medido.",
     "<strong>Instrumentos, não ativos nativos.</strong> Cada taxa se refere ao ativo que é de fato emprestado na Stacks. O SBOR-BTC mede o sBTC, não o bitcoin nativo, e o SBOR-USD mede USDCx e USDh, não dólares bancários. Cada um carrega risco de emissão, paridade ou ponte que o ativo original não tem.",
     "<strong>Rendimento do protocolo fica de fora.</strong> Alguns ativos rendem por si mesmos, e não pelo empréstimo. O sBTC carrega rendimento do protocolo Bitcoin via dual stacking, e o stSTX carrega rendimento de staking PoX administrado pela StackingDAO. Esse rendimento pertence ao ativo, não ao empréstimo, então nunca entra no fixing.",
@@ -595,7 +596,7 @@ function renderChrome(){
   set("t-contractsH", t.contractsH);
   set("contracts", CONTRACTS.map(c =>
     `<span>${c.name}</span><a href="${EXPLORER(c.id)}" target="_blank" rel="noopener">${c.id}</a>`).join(""));
-  set("t-footIndep", t.footIndep); set("t-footIndep2", t.footIndep2);
+  set("t-indep", t.indep);
   set("t-footMethod", t.footMethod(METHOD_VERSION));
   document.getElementById("ghLink").textContent = t.footSource;
   document.getElementById("ghLink").href = GITHUB;
