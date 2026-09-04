@@ -2,7 +2,7 @@ name: SBOR weekly report
 
 on:
   schedule:
-    - cron: "30 14 * * 1"     # Mondays, just after the daily fixing
+    - cron: "30 11 * * 1"     # Mondays, just after the daily fixing
   workflow_dispatch:
 
 permissions:
