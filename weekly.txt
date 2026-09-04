@@ -64,4 +64,7 @@ measures.
 Rates are read from lending contract state on Stacks mainnet and
 published once daily at 11:00 UTC. SBOR is a statistic, not
 investment advice, and is provided as is without warranty.
-Unsubscribe by replying to this email.
+
+You are receiving this because you asked for it at sbor.xyz.
+To unsubscribe, reply with the word unsubscribe, or write to
+contact@sbor.xyz. You will be removed before the next report.
