@@ -24,7 +24,7 @@ jobs:
         run: |
           git config user.name  "sbor-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add weekly.txt
+          git add weekly.txt weekly.html
           if git diff --staged --quiet; then
             echo "No change."
           else
