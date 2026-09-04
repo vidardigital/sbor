@@ -46,6 +46,8 @@ header{border-bottom:1px solid var(--rule)}
 .switch button{font:inherit;font-size:15px;background:none;border:none;border-bottom:2px solid transparent;color:var(--ink-soft);padding:14px 0;margin-right:32px;cursor:pointer;text-align:left}
 .switch button b{font-weight:500;color:inherit}
 .switch button small{display:block;font-size:12.5px;font-weight:400;opacity:.85}
+.switch button .tabnum{display:block;margin-top:6px;font-size:13px;color:var(--accent)}
+.switch button .tabnum i{font-style:normal;color:var(--ink-soft);margin:0 2px}
 .switch button[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--accent)}
 .switch button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
@@ -69,6 +71,7 @@ section{padding:44px 0;border-bottom:1px solid var(--rule)}
 .ranges{display:flex;gap:4px}
 .ranges button{font:inherit;font-size:13px;background:none;border:1px solid var(--rule);color:var(--ink-soft);padding:4px 11px;border-radius:2px;cursor:pointer}
 .ranges button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.ranges .csv{margin-left:10px;color:var(--accent);border-color:var(--accent)}
 .ranges button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .chart{width:100%;height:280px;display:block;border:1px solid var(--rule)}
 .legend{display:flex;gap:22px;margin-top:12px;font-size:13.5px;color:var(--ink-soft);flex-wrap:wrap}
@@ -80,6 +83,8 @@ th.r,td.r{text-align:right;padding-right:0}
 td{padding:13px 12px 13px 0;border-bottom:1px solid var(--rule-soft);vertical-align:middle}
 tr:last-child td{border-bottom:none}
 .venue{font-weight:500}
+a.venue{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--rule)}
+a.venue:hover{color:var(--accent);border-bottom-color:var(--accent)}
 .asset{color:var(--ink-soft);font-size:13px;margin-left:8px}
 .bar{position:relative;display:block;width:100%;max-width:150px;height:7px;background:var(--paper-2);margin-left:auto}
 .bar i{position:absolute;inset:0 auto 0 0;background:var(--accent);display:block}
@@ -98,6 +103,16 @@ tr:last-child td{border-bottom:none}
 .method p strong{color:var(--ink);font-weight:500}
 .formula{font-family:"IBM Plex Mono",monospace;font-size:13.5px;background:var(--paper-2);border-left:2px solid var(--accent);padding:14px 16px;color:var(--ink);margin:6px 0 18px}
 
+.dev{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.devk{font-size:13.5px;color:var(--ink-soft);margin-bottom:8px}
+.code{font-family:"IBM Plex Mono",monospace;font-size:13px;line-height:1.55;background:var(--paper-2);border-left:2px solid var(--accent);padding:14px 16px;color:var(--ink);overflow-x:auto;white-space:pre}
+.code a{color:var(--accent);text-decoration:none}
+.code a:hover{text-decoration:underline}
+.contracts{display:grid;grid-template-columns:1fr 1fr;gap:6px 28px;font-size:13.5px}
+.contracts a{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--accent);text-decoration:none;word-break:break-all}
+.contracts a:hover{text-decoration:underline}
+.contracts span{color:var(--ink-soft)}
+@media (max-width:720px){.dev,.contracts{grid-template-columns:1fr}}
 .signup{display:flex;gap:10px;flex-wrap:wrap;max-width:520px}
 .signup input[type=email]{flex:1 1 260px;font:inherit;font-size:15px;padding:11px 13px;border:1px solid var(--rule);background:var(--paper);color:var(--ink);border-radius:2px}
 .signup input[type=email]:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:var(--accent)}
@@ -108,7 +123,10 @@ tr:last-child td{border-bottom:none}
 
 footer{padding:36px 0 64px;color:var(--ink-soft);font-size:13.5px}
 .oracle{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;border:1px solid var(--rule);padding:16px 18px;margin-bottom:22px}
-.oracle code{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--ink)}
+.oracle{flex-direction:column;align-items:flex-start;gap:12px}
+.footlinks{display:flex;gap:18px;flex-wrap:wrap;font-size:13px}
+.footlinks a{color:var(--accent);text-decoration:none}
+.footlinks a:hover{text-decoration:underline}
 .oracle code a{color:var(--accent);text-decoration:none}
 .oracle code a:hover{text-decoration:underline}
 a{color:var(--accent)}
@@ -200,6 +218,7 @@ a{color:var(--accent)}
           <button data-range="30" aria-pressed="false">30D</button>
           <button data-range="90" aria-pressed="true">90D</button>
           <button data-range="365" aria-pressed="false">1Y</button>
+          <button id="csvBtn" class="csv"></button>
         </div>
       </div>
       <svg class="chart" id="chart" viewBox="0 0 1120 280" preserveAspectRatio="none" role="img" aria-label="Rate history"></svg>
@@ -231,6 +250,38 @@ a{color:var(--accent)}
       <p class="foot-note" id="t-sources"></p>
     </section>
 
+    <section id="dev">
+      <div class="sec-h">
+        <div>
+          <h2 id="t-devH"></h2>
+          <p id="t-devP"></p>
+        </div>
+      </div>
+      <div class="dev">
+        <div>
+          <div class="devk" id="t-devEndpoints"></div>
+          <pre class="code"><a href="/api/v1/latest.json">/api/v1/latest.json</a>     current fixing, with constituents
+<a href="/api/v1/history.json">/api/v1/history.json</a>    daily series since the index began
+<a href="/api/v1/backfill.json">/api/v1/backfill.json</a>   reconstructed context, not the record
+<a href="/latest.txt">/latest.txt</a>             plain text, one line per currency
+<a href="/weekly.txt">/weekly.txt</a>             weekly report, plain text
+<a href="/llms.txt">/llms.txt</a>               method and integration policy</pre>
+        </div>
+        <div>
+          <div class="devk" id="t-devExample"></div>
+          <pre class="code">curl -s https://sbor.xyz/api/v1/latest.json \
+  | jq '.indices["SBOR-USD"] | {borrow, supply}'
+
+{
+  "borrow": <span id="exB">2.29</span>,
+  "supply": <span id="exS">0.58</span>
+}</pre>
+        </div>
+      </div>
+      <div class="devk" id="t-contractsH" style="margin-top:26px"></div>
+      <div class="contracts" id="contracts"></div>
+    </section>
+
     <section id="signup">
       <div class="sec-h">
         <div>
@@ -253,14 +304,34 @@ a{color:var(--accent)}
 <footer>
   <div class="wrap">
     <div class="oracle">
-      <div id="t-oracle-a"></div>
-      <div id="t-oracle-b"></div>
+      <div><span id="t-footIndep"></span> <a href="https://www.stacks.co" target="_blank" rel="noopener">Stacks</a><span id="t-footIndep2"></span></div>
+      <div class="footlinks">
+        <span id="t-footMethod"></span>
+        <a href="https://github.com/vidardigital/sbor" id="ghLink" target="_blank" rel="noopener"></a>
+        <a href="mailto:contact@sbor.xyz" id="mailLink"></a>
+        <a href="https://x.com/SBORindex" target="_blank" rel="noopener">@SBORindex</a>
+        <span>sbor.xyz · sbor.btc · sbor.stx</span>
+      </div>
     </div>
     <p id="t-disclaimer"></p>
   </div>
 </footer>
 
 <script>
+/* ---------------- links ---------------- */
+const VENUE_URL = {
+  "Zest V2": "https://app.zestprotocol.com",
+  "Granite": "https://granite.world"
+};
+const EXPLORER = id => `https://explorer.hiro.so/txid/${id}?chain=mainnet`;
+const CONTRACTS = [
+  { name:"Zest V2 rates",        id:"SP1A27KFY4XERQCCRCARCYD1CC5N7M6688BSYADJ7.v0-1-data" },
+  { name:"Granite rate curve",   id:"SPSX722NK9V3A8D3CVQT0CDY4EBQ3E9FSDDE61FT.linear-kinked-ir-v1" },
+  { name:"Granite market state", id:"SP3M2BYF7RGF8WKW5FVDNJ6WR8D7AR9BHDXAKPXZE.state-v1" },
+  { name:"PoX",                  id:"SP000000000000000000002Q6VF78.pox-5" }
+];
+const GITHUB = "https://github.com/vidardigital/sbor";
+
 /* ---------------- copy ---------------- */
 const I18N = {
 en:{
@@ -275,6 +346,17 @@ en:{
   poxH:"Bitcoin staking yield",
   poxP:"What PoX currently pays STX stakers, in bitcoin, from what miners commit. This is a staking yield on a locked position, not a lending rate, so it sits beside the indices and never inside them.",
   poxMeta:(c,btc,stx)=>`Cycle ${c} · ${btc} BTC paid to stakers · ${stx} STX locked`,
+  csv:"Download CSV",
+  devH:"Use the data",
+  devP:"Everything on this page is available as JSON and plain text. No key, no rate limit, no registration. Build against v1 and it will not change shape under you.",
+  devEndpoints:"Endpoints",
+  devExample:"Example",
+  contractsH:"Contracts read",
+  footIndep:"SBOR is an independent benchmark for the",
+  footIndep2:"ecosystem. It is not affiliated with Stacks, the Stacks Foundation, or any venue it measures.",
+  footMethod:v=>`Methodology ${v}`,
+  footSource:"Source on GitHub",
+  footContact:"contact@sbor.xyz",
   histH:"History",
   histP:"Daily closes since the index began. A moving average is shown only once the full window exists.",
   notEnough:"Not enough history yet to draw this range.",
@@ -306,9 +388,7 @@ en:{
   signupH:"Weekly rate report",
   signupP:"Monday mornings. Where each currency fixed, how the spread moved over the week, the trend line, and any change to constituents. One email, nothing else.",
   signupPlaceholder:"you@fund.com", signupBtn:"Subscribe",
-  oracleA:'Data · machine readable, no key required<br><code><a href="/api/latest.json">/api/latest.json</a> · <a href="/api/history.json">/api/history.json</a> · <a href="/latest.txt">/latest.txt</a> · <a href="/llms.txt">/llms.txt</a></code>',
-  oracleB:"Free to reference. No permission required.<br>sbor.xyz · sbor.btc · sbor.stx",
-  disclaimer:"SBOR is published as a public good. It is a statistic, not an investment: nobody earns SBOR. Rates are read from contract state on Stacks mainnet. Depth data from DefiLlama."
+  disclaimer:"SBOR is published as a public good and is provided as is, without warranty. It is a statistic, not investment advice, and nobody earns SBOR. It is a tool for making better decisions, not a recommendation to make any. Rates are read from contract state on Stacks mainnet."
 },
 pt:{
   fullname:"Taxa de Referência de Bitcoin da Stacks",
@@ -322,6 +402,17 @@ pt:{
   poxH:"Rendimento do staking de bitcoin",
   poxP:"O que o PoX paga hoje a quem faz staking de STX, em bitcoin, a partir do que os mineradores comprometem. É um rendimento de staking sobre uma posição travada, não uma taxa de crédito, por isso fica ao lado dos índices e nunca dentro deles.",
   poxMeta:(c,btc,stx)=>`Ciclo ${c} · ${btc} BTC pagos a stakers · ${stx} STX travados`,
+  csv:"Baixar CSV",
+  devH:"Use os dados",
+  devP:"Tudo nesta página está disponível em JSON e texto puro. Sem chave, sem limite de requisições, sem cadastro. Construa sobre a v1 e o formato não muda embaixo de você.",
+  devEndpoints:"Endpoints",
+  devExample:"Exemplo",
+  contractsH:"Contratos lidos",
+  footIndep:"O SBOR é uma referência independente para o ecossistema",
+  footIndep2:". Não tem vínculo com a Stacks, com a Stacks Foundation nem com qualquer plataforma que mede.",
+  footMethod:v=>`Metodologia ${v}`,
+  footSource:"Código no GitHub",
+  footContact:"contact@sbor.xyz",
   histH:"Histórico",
   histP:"Fechamentos diários desde o início do índice. A média móvel só aparece quando existe janela completa de dados.",
   notEnough:"Ainda não há histórico suficiente para desenhar este período.",
@@ -353,9 +444,7 @@ pt:{
   signupH:"Relatório semanal de taxas",
   signupP:"Segunda de manhã. Onde cada moeda fechou, como o spread se moveu na semana, a linha de tendência e qualquer mudança nos componentes. Um e-mail, nada além disso.",
   signupPlaceholder:"voce@fundo.com", signupBtn:"Assinar",
-  oracleA:'Dados · legíveis por máquina, sem necessidade de chave<br><code><a href="/api/latest.json">/api/latest.json</a> · <a href="/api/history.json">/api/history.json</a> · <a href="/latest.txt">/latest.txt</a> · <a href="/llms.txt">/llms.txt</a></code>',
-  oracleB:"Livre para referência. Não é preciso pedir permissão.<br>sbor.xyz · sbor.btc · sbor.stx",
-  disclaimer:"O SBOR é publicado como bem público. É uma estatística, não um investimento: ninguém recebe SBOR. As taxas são lidas do estado dos contratos na mainnet da Stacks. Dados de profundidade da DefiLlama."
+  disclaimer:"O SBOR é publicado como bem público e fornecido como está, sem garantia. É uma estatística, não uma recomendação de investimento, e ninguém recebe SBOR. É uma ferramenta para decidir melhor, não uma orientação sobre o que decidir. As taxas são lidas do estado dos contratos na mainnet da Stacks."
 }};
 
 const INDEX_COPY = {
@@ -405,6 +494,7 @@ function computed(key){
 
 let HISTORY = [];   /* filled by boot() from api/v1/history.json */
 let POX = null;     /* filled by boot() from api/v1/latest.json */
+let METHOD_VERSION = "1.0.0";
 
 const movingAvg = (arr,w) => arr.map((_,i)=>{
   const win = arr.slice(Math.max(0,i-w+1), i+1);
@@ -500,7 +590,20 @@ function renderChrome(){
   set("t-cons-h", t.consH); set("t-cons-foot", t.consFoot);
   set("t-method-h", t.methodH);
   set("t-signup-h", t.signupH); set("t-signup-p", t.signupP);
-  set("t-oracle-a", t.oracleA); set("t-oracle-b", t.oracleB);
+  set("t-devH", t.devH); set("t-devP", t.devP);
+  set("t-devEndpoints", t.devEndpoints); set("t-devExample", t.devExample);
+  set("t-contractsH", t.contractsH);
+  set("contracts", CONTRACTS.map(c =>
+    `<span>${c.name}</span><a href="${EXPLORER(c.id)}" target="_blank" rel="noopener">${c.id}</a>`).join(""));
+  set("t-footIndep", t.footIndep); set("t-footIndep2", t.footIndep2);
+  set("t-footMethod", t.footMethod(METHOD_VERSION));
+  document.getElementById("ghLink").textContent = t.footSource;
+  document.getElementById("ghLink").href = GITHUB;
+  document.getElementById("mailLink").textContent = t.footContact;
+  document.getElementById("csvBtn").textContent = t.csv;
+  const usd = computed("USD");
+  document.getElementById("exB").textContent = fmt(usd.borrow);
+  document.getElementById("exS").textContent = fmt(usd.supply);
   set("t-disclaimer", t.disclaimer);
   document.getElementById("t-signup-btn").textContent = t.signupBtn;
   document.getElementById("email").placeholder = t.signupPlaceholder;
@@ -516,10 +619,13 @@ function renderChrome(){
   const F = '<div class="formula">SBOR(borrow) = Σ wᵢ·rᵢ / Σ wᵢ<br>SBOR(supply) = Σ wᵢ·sᵢ / Σ wᵢ</div>';
   set("method-a", t.methodA.map(p => p==="FORMULA" ? F : `<p>${p}</p>`).join(""));
   set("method-b", t.methodB.map(p => `<p>${p}</p>`).join(""));
-  set("switch", Object.keys(INDICES).map(k=>`
+  set("switch", Object.keys(INDICES).map(k=>{
+    const c = computed(k);
+    return `
     <button data-k="${k}" aria-pressed="${k===current}">
       <b>${INDICES[k].label}</b><small>${INDEX_COPY[k][lang].sub}</small>
-    </button>`).join(""));
+      <span class="tabnum num">${fmt(c.borrow)}% <i>/</i> ${fmt(c.supply)}%</span>
+    </button>`;}).join(""));
   document.querySelectorAll("#lang button").forEach(b =>
     b.setAttribute("aria-pressed", b.dataset.lang === lang));
 }
@@ -536,7 +642,9 @@ function render(){
   settle(document.getElementById("supplyVal"), ix.supply);
   set("rows", ix.markets.map(m=>`
     <tr>
-      <td><span class="venue">${m.venue}</span><span class="asset">${m.asset}</span></td>
+      <td>${VENUE_URL[m.venue]
+          ? `<a class="venue" href="${VENUE_URL[m.venue]}" target="_blank" rel="noopener">${m.venue}</a>`
+          : `<span class="venue">${m.venue}</span>`}<span class="asset">${m.asset}</span></td>
       <td class="r num">${fmt(m.borrow)}%</td>
       <td class="r num">${fmt(m.supply)}%</td>
       <td class="r num hide-sm">${m.incentive ? "+"+fmt(m.incentive)+"%" : "&mdash;"}</td>
@@ -547,6 +655,16 @@ function render(){
   draw();
 }
 
+document.getElementById("csvBtn").addEventListener("click", ()=>{
+  const labels = ["SBOR-USD","SBOR-BTC","SBOR-STX","SBOR-POX"];
+  const head = ["date", ...labels.flatMap(l => l==="SBOR-POX" ? [`${l}_apy`] : [`${l}_borrow`,`${l}_supply`])];
+  const rows = HISTORY.map(r => [r.date, ...labels.flatMap(l =>
+    l==="SBOR-POX" ? [r[l]?.apy ?? ""] : [r[l]?.borrow ?? "", r[l]?.supply ?? ""])]);
+  const csv = [head, ...rows].map(x => x.join(",")).join("\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type:"text/csv" }));
+  a.download = "sbor_history.csv"; a.click();
+});
 document.getElementById("lang").addEventListener("click", e=>{
   const b = e.target.closest("button"); if(!b) return;
   lang = b.dataset.lang;
@@ -582,6 +700,7 @@ async function boot(){
     }
     if (d.fixing) fixingDate = d.fixing.slice(0,10);
     if (d.poxReference) POX = d.poxReference;
+    if (d.methodologyVersion) METHOD_VERSION = d.methodologyVersion;
   }catch(e){ console.warn("Live fixing unavailable, showing bundled snapshot.", e); }
   try{
     const h = await fetch("/api/v1/history.json", { cache:"no-store" });
