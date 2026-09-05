@@ -7,7 +7,7 @@
     "sbor.btc",
     "sbor.stx"
   ],
-  "fixing": "2026-09-04T13:52:45Z",
+  "fixing": "2026-09-05T13:37:10Z",
   "methodologyVersion": "1.0.0",
   "isDailyFixing": true,
   "basis": "APY, annually compounded",
@@ -33,7 +33,7 @@
           "asset": "USDCx",
           "borrow": 2.68,
           "supply": 0.76,
-          "depthUsd": 10135361,
+          "depthUsd": 10136787,
           "phaseIn": 1,
           "weight": 0.6505
         },
@@ -51,9 +51,34 @@
           "asset": "USDh",
           "borrow": 2.74,
           "supply": 0,
-          "depthUsd": 439335,
+          "depthUsd": 439776,
           "phaseIn": 1,
           "weight": 0.0282
+        }
+      ]
+    },
+    "SBOR-BTC": {
+      "label": "SBOR-BTC",
+      "currency": "BTC",
+      "headline": "What it costs to borrow sBTC on Stacks.",
+      "borrow": 0.01,
+      "supply": 0,
+      "allInSupply": 0,
+      "allInSupplyDiffers": false,
+      "venues": [
+        "Zest V2"
+      ],
+      "largestConstituentWeight": 1,
+      "markets": [
+        {
+          "venue": "Zest V2",
+          "asset": "sBTC",
+          "borrow": 0.01,
+          "supply": 0,
+          "protocolYieldSource": "Bitcoin protocol yield via dual stacking, paid on enrolment",
+          "depthUsd": 53079867,
+          "phaseIn": 1,
+          "weight": 1
         }
       ]
     },
@@ -61,14 +86,14 @@
       "label": "SBOR-STX",
       "currency": "STX",
       "headline": "What money costs in STX on Stacks.",
-      "borrow": 1.77,
-      "supply": 0.67,
-      "allInSupply": 0.67,
+      "borrow": 1.75,
+      "supply": 0.64,
+      "allInSupply": 0.64,
       "allInSupplyDiffers": false,
       "venues": [
         "Zest V2"
       ],
-      "largestConstituentWeight": 0.5219,
+      "largestConstituentWeight": 0.5144,
       "markets": [
         {
           "venue": "Zest V2",
@@ -76,18 +101,18 @@
           "borrow": 1.13,
           "supply": 0.06,
           "protocolYieldSource": "PoX staking yield on the underlying, managed by StackingDAO",
-          "depthUsd": 2800048,
+          "depthUsd": 2757163,
           "phaseIn": 1,
-          "weight": 0.5219
+          "weight": 0.5144
         },
         {
           "venue": "Zest V2",
           "asset": "STX",
-          "borrow": 2.47,
-          "supply": 1.33,
-          "depthUsd": 2565391,
+          "borrow": 2.4,
+          "supply": 1.26,
+          "depthUsd": 2603273,
           "phaseIn": 1,
-          "weight": 0.4781
+          "weight": 0.4856
         }
       ]
     }
@@ -96,14 +121,14 @@
     "label": "SBOR-POX",
     "headline": "The native Bitcoin yield paid to STX stakers.",
     "kind": "staking yield",
-    "apy": 5.33,
+    "apy": 5.45,
     "cycle": 141,
-    "cycleYieldPct": 0.2077,
+    "cycleYieldPct": 0.2121,
     "btcPaid": 2.928688,
     "stxLocked": 421543815,
-    "stxPerBtc": 298983.18,
+    "stxPerBtc": 305312.38,
     "rateSource": "Bitflow",
-    "rateQuoteImpactBps": 13,
+    "rateQuoteImpactBps": 14,
     "note": "Paid in bitcoin against a position locked in STX, so the figure depends on the BTC/STX exchange rate rather than on either dollar price. It is a staking yield, not a lending rate, and is never blended into the lending indices."
   },
   "notes": [
